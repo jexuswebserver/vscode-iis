@@ -61,13 +61,13 @@ export function findConfigFilesInParentDirs(filePath: string): string[] {
         }
 
         // Sanity check - the parent directory must exist
-        if (!fs.existsSync(parentDir) || !fs.statSync(parentDir).isDirectory) {
+        if (!fs.existsSync(parentDir) || !fs.statSync(parentDir).isDirectory()) {
             break;
         }
 
         // Check this directory for applicationHost.config
         const configPath = path.join(parentDir, 'applicationHost.config');
-        if (fs.existsSync(configPath) && fs.statSync(configPath).isFile) {
+        if (fs.existsSync(configPath) && fs.statSync(configPath).isFile()) {
             paths.push(configPath);
         }
 

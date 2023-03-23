@@ -1,71 +1,36 @@
-# vscode-iis README
+# IIS and IIS Express extension for Visual Studio Code
 
-This is the README for your extension "vscode-iis". After writing up a brief description, we recommend including the following sections.
+This extension gives you the power to run a folder open in Visual Studio Code as a website using IIS and/or IIS Express web server.
+
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
+[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
+[![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
+[![Visual Studio Marketplace Rating](https://img.shields.io/visual-studio-marketplace/r/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
+
+## Call for Sponsorship
+<a href="https://github.com/sponsors/lextm"><img src="https://github.githubassets.com/images/modules/site/sponsors/pixel-mona-heart.gif" align="left" height="24" /></a>
+This is a **free extension**. If you find it useful to yourself or your business then <a href="https://github.com/sponsors/lextm">you might consider sponsoring it on Github</a>.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+* Detect and launch Jexus Manager to enable the opened project on IIS/IIS Express web server.
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+To learn more about Jexus Manager, you can visit [its documentation site](https://docs.jexusmanager.com/index.html).
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+* Windows
+* [Jexus Manager](https://github.com/jexuswebserver/JexusManager/releases)
 
-## Extension Settings
+## Available Commands
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+* **Launch Jexus Manager for this web project** - Start Jexus Manager to perform IIS/IIS Express actions.
+* **Reset IIS configuration file selection** - Change the config file Jexus Manager should use.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+* Initially only IIS Express mode is supported. IIS mode is under development.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Release notes can be found at [GitHub](https://github.com/jexuswebserver/vscode-iis/releases).

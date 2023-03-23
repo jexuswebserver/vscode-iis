@@ -3,7 +3,9 @@
 import * as vscode from 'vscode';
 import { launchJexusManager } from './iis/jexusManager';
 import ServerHostingStatus from './iis/statusBar';
+import { homepage } from './util/constants';
 import { Logger } from './util/logger';
+import { learnMore } from './util/messages';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -11,9 +13,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const channel = vscode.window.createOutputChannel('IIS');
 	const logger = new Logger(channel);
-    logger.log('Please visit https://docs.jexusmanager.com/getting-started/features.html to learn how to configure the extension.');
+    logger.log(`Please visit ${homepage} to learn how to configure the extension.`);
 
-	await logger.logPlatform();
+	const supported = await logger.logPlatform();
+    if (!supported) {
+        learnMore('This extension only works on Windows');
+        return;
+    }
 
     // Status bar to show the active server hosting configuration
     const status = new ServerHostingStatus(logger);
@@ -27,7 +33,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     await status.update();
 
 	let disposable = vscode.commands.registerCommand('iis.launch', () => {
-        launchJexusManager(logger);
+        launchJexusManager(context, logger);
 	});
 
 	context.subscriptions.push(disposable);

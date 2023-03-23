@@ -16,6 +16,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     logger.log(`Please visit ${homepage} to learn how to configure the extension.`);
 
 	const supported = await logger.logPlatform();
+    vscode.commands.executeCommand('setContext', 'iis.supported', supported);
     if (!supported) {
         learnMore('This extension only works on Windows');
         return;

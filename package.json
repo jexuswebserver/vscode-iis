@@ -30,11 +30,13 @@
     "commands": [
       {
         "command": "iis.launch",
-        "title": "Launch IIS/IIS Express for this web project"
+        "title": "Launch IIS/IIS Express for this web project",
+        "when": "iis.supported"
       },
       {
         "command": "iis.resetStatus",
-        "title": "Reset IIS/IIS Express configuration file selection"
+        "title": "Reset IIS/IIS Express configuration file selection",
+        "when": "iis.supported"
       }
     ],
     "configuration": [

@@ -30,11 +30,11 @@
     "commands": [
       {
         "command": "iis.launch",
-        "title": "Launch Jexus Manager for this web project"
+        "title": "Launch IIS/IIS Express for this web project"
       },
       {
         "command": "iis.resetStatus",
-        "title": "Reset IIS configuration file selection"
+        "title": "Reset IIS/IIS Express configuration file selection"
       }
     ],
     "configuration": [

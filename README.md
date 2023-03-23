@@ -24,8 +24,10 @@ To learn more about Jexus Manager, you can visit [its documentation site](https:
 
 ## Available Commands
 
-* **Launch Jexus Manager for this web project** - Start Jexus Manager to perform IIS/IIS Express actions.
-* **Reset IIS configuration file selection** - Change the config file Jexus Manager should use.
+Use `View | Command Pallette...` to open the command list and search for the commands below,
+
+* **Launch IIS/IIS Express for this web project** - Start Jexus Manager to perform IIS/IIS Express actions.
+* **Reset IIS/IIS Express configuration file selection** - Change the config file Jexus Manager should use.
 
 ## Known Issues
 

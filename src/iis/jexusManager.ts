@@ -24,9 +24,9 @@ export async function launchJexusManager(context: ExtensionContext, logger: Logg
                 const result = await parser.parseStringPromise(data);
                 result.configuration['system.applicationHost'][0].sites[0].site[0].application[0].virtualDirectory[0].$.physicalPath = currentFolder;
                 const xml = builder.buildObject(result);
-                await fs.promises.mkdir(path.dirname(target), { recursive: true })
+                configPath = path.dirname(target);
+                await fs.promises.mkdir(configPath, { recursive: true });
                 await fs.promises.writeFile(target, xml);
-                configPath = target;
             } catch (err) {
                 learnMore('Working directory update failed');
                 logger.appendLine(`Unexpected error ${err}`);

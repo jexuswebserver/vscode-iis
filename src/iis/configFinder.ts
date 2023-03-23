@@ -25,7 +25,7 @@ export async function findConfigFiles(): Promise<string[]> {
     }
 
     const root = workspace.workspaceFolders[0];
-    const files = await workspace.findFiles('**/*.config');
+    const files = await workspace.findFiles('**/*.config', '.iis/*');
     const items = files.filter(file => file.fsPath.toLowerCase().endsWith('applicationhost.config'));
     return urisToPaths(items, root);
 }

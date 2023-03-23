@@ -18,12 +18,12 @@ export class ServerHostingSelector {
         const workspaceRoot = Configuration.GetRootPath();
 
         const iis = new ServerHostingConfig();
-        iis.label = '$(code) Use IIS';
+        iis.label = '$(code) Use IIS Express: .iis\\applicationhost.config';
         iis.tooltip = 'Click to reset';
-        iis.description = 'Do not use IIS Express, but IIS instead';
+        iis.description = 'Use IIS Express with .iis\\applicationhost.config';
         iis.configDirectory = '';
         iis.workspaceRoot = workspaceRoot;
-        iis.shortLabel = iis.label;
+        iis.shortLabel = '$(code) IIS Express: .iis\\applicationhost.config';
 
         if (!inReset) {
             if (configPathFromSettings === '') {
@@ -62,7 +62,6 @@ export class ServerHostingSelector {
         addPaths(paths1);
         logger.log('[preview] Found applicationHost.config paths: ' + JSON.stringify(pathStrings));
 
-        // The user can choose to use IIS instead of IIS Express
         configurations.push(iis);
         if (configurations.length === 1) {
             // no applicationHost.config

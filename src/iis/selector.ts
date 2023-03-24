@@ -14,23 +14,23 @@ export class ServerHostingSelector {
         const configurations: ServerHostingConfig[] = [];
         const pathStrings: string[] = [];
         // A path may be configured in the settings. Include this path
-        const configPathFromSettings = Configuration.getConfigPath();
+        const selected = Configuration.getConfigPath();
         const workspaceRoot = Configuration.GetRootPath();
 
-        const iis = new ServerHostingConfig();
-        iis.label = '$(code) Use IIS Express: .iis\\applicationhost.config';
-        iis.tooltip = 'Click to reset';
-        iis.description = 'Use IIS Express with .iis\\applicationhost.config';
-        iis.configDirectory = '';
-        iis.workspaceRoot = workspaceRoot;
-        iis.shortLabel = '$(code) IIS Express: .iis\\applicationhost.config';
+        const temp = new ServerHostingConfig();
+        temp.label = '$(code) Use IIS Express: .iis\\applicationhost.config';
+        temp.tooltip = 'Click to reset';
+        temp.description = 'Use IIS Express with .iis\\applicationhost.config';
+        temp.configDirectory = '';
+        temp.workspaceRoot = workspaceRoot;
+        temp.shortLabel = '$(code) IIS Express: .iis\\applicationhost.config';
 
         if (!inReset) {
-            if (configPathFromSettings === '') {
-                return iis;
+            if (selected === '') {
+                return temp;
             }
 
-            const pth = path.join(path.normalize(configPathFromSettings), 'applicationHost.config');
+            const pth = path.join(path.normalize(selected), 'applicationHost.config');
             const qpSettings = new ServerHostingConfig();
             qpSettings.label = `\$(gear) Use IIS Express: ${pth}`;
             qpSettings.tooltip = `Click to reset. Full path: ${pth}`;
@@ -62,7 +62,10 @@ export class ServerHostingSelector {
         addPaths(paths1);
         logger.log('[preview] Found applicationHost.config paths: ' + JSON.stringify(pathStrings));
 
-        configurations.push(iis);
+        if (configurations.length === 0) {
+            configurations.push(temp);
+        }
+
         if (configurations.length === 1) {
             // no applicationHost.config
             return configurations[0];

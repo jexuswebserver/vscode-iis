@@ -27,6 +27,13 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "languages": [
+      {
+        "id": "iis-config",
+        "extensions": [ ".config" ],
+        "aliases": [ "IIS Configuration File", "IIS Express Configuration File" ]
+      }
+    ],
     "commands": [
       {
         "command": "iis.launch",

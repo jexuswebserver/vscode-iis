@@ -12,6 +12,14 @@
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "IIS",
+    "IIS Express",
+    "Web Server",
+    "Server",
+    "Live Server",
+    "Dev Server"
+  ],
   "icon": "images/iis-icon.png",
   "galleryBanner": {
     "color": "#007acc",

@@ -12,7 +12,7 @@ import { Logger } from '../util/logger';
  * then the config object is reset and you will need to select from
  * the menu next time.
  */
-export default class RstTransformerStatus {
+export default class ServerHostingStatus {
     private _statusBarItem: vscode.StatusBarItem;
     public config: ServerHostingConfig | undefined;
     private inReset:  boolean;
@@ -55,7 +55,7 @@ export default class RstTransformerStatus {
 
     public async refreshConfig(): Promise<ServerHostingConfig | undefined> {
         const configDir = await ServerHostingSelector.findConfigDir(this.logger, this.inReset);
-        if (configDir == undefined) {
+        if (configDir === undefined) {
             return undefined;
         }
 

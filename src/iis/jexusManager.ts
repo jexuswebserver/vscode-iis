@@ -47,5 +47,5 @@ export async function launchJexusManager(context: ExtensionContext, logger: Logg
         return;
     }
     const args = [path.join(configPath, 'applicationHost.config')];
-    spawn(jexusManagerPath, args);
+    spawn(jexusManagerPath, args, { cwd: path.dirname(jexusManagerPath) });
 }

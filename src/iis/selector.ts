@@ -12,69 +12,67 @@ export class ServerHostingSelector {
     public static async findConfigDir(logger: Logger, inReset: boolean = false): Promise<ServerHostingConfig | undefined> {
 
         const configurations: ServerHostingConfig[] = [];
-        const pathStrings: string[] = [];
         // A path may be configured in the settings. Include this path
         const selected = Configuration.getConfigPath();
         const workspaceRoot = Configuration.GetRootPath();
 
-        const temp = new ServerHostingConfig();
-        temp.label = '$(code) Use IIS Express: .iis\\applicationhost.config';
-        temp.tooltip = 'Click to reset';
-        temp.description = 'Use IIS Express with .iis\\applicationhost.config';
-        temp.configDirectory = '';
-        temp.workspaceRoot = workspaceRoot;
-        temp.shortLabel = '$(code) IIS Express: .iis\\applicationhost.config';
+        const pathStrings: string[] = [];
 
-        if (!inReset) {
-            if (selected === '') {
-                return temp;
-            }
-
-            const pth = path.join(path.normalize(selected), 'applicationHost.config');
-            const qpSettings = new ServerHostingConfig();
-            qpSettings.label = `\$(gear) Use IIS Express: ${pth}`;
-            qpSettings.tooltip = `Click to reset. Full path: ${pth}`;
-            qpSettings.description += ' (from iis.configPath setting)';
-            qpSettings.configDirectory = path.dirname(pth);
-            qpSettings.workspaceRoot = workspaceRoot;
-            qpSettings.shortLabel = `\$(gear) IIS Express: ${shrink(pth)}`;
-            return qpSettings;
-        }
-        // Add path to a directory containing applicationHost.config if it is not already stored
-        function addPaths(pathsToAdd: string[]) {
-            pathsToAdd.forEach((confPath) => {
+        if (inReset || selected === '') {
+            // Search for unique applicationHost.config paths in the workspace and in parent
+            // directories (useful when opening a single file, not a workspace)
+            const pathsToAdd: string[] = await findConfigFiles();
+            for (const confPath of pathsToAdd) {
                 const pth = path.normalize(confPath);
-                if (pathStrings.indexOf(pth) === -1) {
+                if (!pathStrings.includes(pth)) {
                     const qp = new ServerHostingConfig();
-                    qp.label = `\$(gear) Use IIS Express: ${pth}`;
+                    qp.label = `$(gear) Use IIS Express: ${pth}`;
                     qp.tooltip = `Click to reset. Full path: ${pth}`;
                     qp.configDirectory = path.dirname(pth);
                     qp.workspaceRoot = workspaceRoot;
-                    qp.shortLabel = `\$(gear) IIS Express: ${shrink(pth)}`;
+                    qp.shortLabel = `$(gear) IIS Express: ${shrink(pth)}`;
                     configurations.push(qp);
                     pathStrings.push(pth);
                 }
-            });
+            }
         }
-        // Search for unique applicationHost.config paths in the workspace and in parent
-        // directories (useful when opening a single file, not a workspace)
-        const paths1: string[] = await findConfigFiles();
-        addPaths(paths1);
+
         logger.log('[preview] Found applicationHost.config paths: ' + JSON.stringify(pathStrings));
 
         if (configurations.length === 0) {
-            configurations.push(temp);
+            const configDefault = new ServerHostingConfig();
+            configDefault.label = '$(code) Use IIS Express: .iis\\applicationhost.config';
+            configDefault.tooltip = 'Click to reset';
+            configDefault.description = 'Use IIS Express with .iis\\applicationhost.config';
+            configDefault.configDirectory = '';
+            configDefault.workspaceRoot = workspaceRoot;
+            configDefault.shortLabel = '$(code) IIS Express: .iis\\applicationhost.config';
+            configurations.push(configDefault);
         }
 
         if (configurations.length === 1) {
-            // no applicationHost.config
+            if (inReset) {
+                window.showInformationMessage("A single config file detected. No other files to select.");
+            }
             return configurations[0];
         }
 
-        // Found multiple applicationHost.config files, let the user decide
-        return window.showQuickPick(configurations, {
-            placeHolder: 'Select how to host this project',
-        });
+        if (inReset) {
+            // Found multiple applicationHost.config files, let the user decide
+            return window.showQuickPick(configurations, {
+                placeHolder: 'Select how to host this project',
+            });
+        }
+
+        const fullPathSelected = path.join(path.normalize(selected), 'applicationHost.config');
+        const configSelected = new ServerHostingConfig();
+        configSelected.label = `\$(gear) Use IIS Express: ${fullPathSelected}`;
+        configSelected.tooltip = `Click to reset. Full path: ${fullPathSelected}`;
+        configSelected.description += ' (from iis.configPath setting)';
+        configSelected.configDirectory = path.dirname(fullPathSelected);
+        configSelected.workspaceRoot = workspaceRoot;
+        configSelected.shortLabel = `\$(gear) IIS Express: ${shrink(fullPathSelected)}`;
+        return configSelected;
     }
 }
 

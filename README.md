@@ -23,6 +23,7 @@ To learn more about Jexus Manager, you can visit [its documentation site](https:
 
 * Windows
 * [Jexus Manager](https://github.com/jexuswebserver/JexusManager/releases)
+* IIS Express
 
 ## Available Commands
 

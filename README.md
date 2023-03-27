@@ -17,6 +17,8 @@ This is a **free extension**. If you find it useful to yourself or your business
 
 To learn more about Jexus Manager, you can visit [its documentation site](https://docs.jexusmanager.com/index.html).
 
+![VS Code](images/vscode-iis.gif)
+
 ## Requirements
 
 * Windows

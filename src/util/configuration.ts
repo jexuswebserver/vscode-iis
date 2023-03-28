@@ -9,6 +9,10 @@ export class Configuration {
         return Configuration.loadSetting('configDir', '', true, 'iis');
     }
 
+    public static getBrowser(): string {
+        return Configuration.loadSetting('browser', '', true, 'iis');
+    }
+
     public static async setConfigPath(value: string, insertMacro: boolean): Promise<string | undefined> {
         return await Configuration.saveSetting('configDir', value, insertMacro, 'iis');
     }

@@ -39,15 +39,28 @@ export class ServerHostingSelector {
 
         logger.log('[preview] Found applicationHost.config paths: ' + JSON.stringify(pathStrings));
 
+        const fullPathSelected = path.join(path.normalize(selected), 'applicationHost.config');
+        const configSelected = new ServerHostingConfig();
+        configSelected.label = `\$(gear) Use IIS Express: ${fullPathSelected}`;
+        configSelected.tooltip = `Click to reset. Full path: ${fullPathSelected}`;
+        configSelected.description += ' (from iis.configPath setting)';
+        configSelected.configDirectory = path.dirname(fullPathSelected);
+        configSelected.workspaceRoot = workspaceRoot;
+        configSelected.shortLabel = `\$(gear) IIS Express: ${shrink(fullPathSelected)}`;
+
         if (configurations.length === 0) {
-            const configDefault = new ServerHostingConfig();
-            configDefault.label = '$(code) Use IIS Express: .iis\\applicationhost.config';
-            configDefault.tooltip = 'Click to reset';
-            configDefault.description = 'Use IIS Express with .iis\\applicationhost.config';
-            configDefault.configDirectory = '';
-            configDefault.workspaceRoot = workspaceRoot;
-            configDefault.shortLabel = '$(code) IIS Express: .iis\\applicationhost.config';
-            configurations.push(configDefault);
+            if (selected !== null) {
+                configurations.push(configSelected);
+            } else {
+                const configDefault = new ServerHostingConfig();
+                configDefault.label = '$(code) Use IIS Express: .iis\\applicationhost.config';
+                configDefault.tooltip = 'Click to reset';
+                configDefault.description = 'Use IIS Express with .iis\\applicationhost.config';
+                configDefault.configDirectory = '';
+                configDefault.workspaceRoot = workspaceRoot;
+                configDefault.shortLabel = '$(code) IIS Express: .iis\\applicationhost.config';
+                configurations.push(configDefault);
+            }
         }
 
         if (configurations.length === 1) {
@@ -64,14 +77,6 @@ export class ServerHostingSelector {
             });
         }
 
-        const fullPathSelected = path.join(path.normalize(selected), 'applicationHost.config');
-        const configSelected = new ServerHostingConfig();
-        configSelected.label = `\$(gear) Use IIS Express: ${fullPathSelected}`;
-        configSelected.tooltip = `Click to reset. Full path: ${fullPathSelected}`;
-        configSelected.description += ' (from iis.configPath setting)';
-        configSelected.configDirectory = path.dirname(fullPathSelected);
-        configSelected.workspaceRoot = workspaceRoot;
-        configSelected.shortLabel = `\$(gear) IIS Express: ${shrink(fullPathSelected)}`;
         return configSelected;
     }
 }

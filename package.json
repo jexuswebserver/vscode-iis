@@ -65,6 +65,12 @@
             "default": "",
             "description": "Selected IIS configuration file.",
             "scope": "window"
+          },
+          "iis.browser": {
+            "type": "string",
+            "default": "",
+            "description": "The browser to use for IIS.",
+            "scope": "window"
           }
         }
       }

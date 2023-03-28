@@ -46,6 +46,15 @@ export async function launchJexusManager(context: ExtensionContext, logger: Logg
         learnMore('Jexus Manager isn\'t installed');
         return;
     }
+    const browser = Configuration.getBrowser();
     const args = [path.join(configPath, 'applicationHost.config')];
-    spawn(jexusManagerPath, args, { cwd: path.dirname(jexusManagerPath) });
+    const options = {
+        cwd: path.dirname(jexusManagerPath),
+        env: {
+            ...process.env,
+            JEXUSMANAGER_BROWSER: browser
+        }
+    };
+
+    spawn(jexusManagerPath, args, options);
 }

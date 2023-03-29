@@ -2,7 +2,7 @@
   "name": "iis",
   "displayName": "IIS and IIS Express extension for Visual Studio Code",
   "description": "IIS and IIS Express extension for Visual Studio Code. Quickly launch your project in Jexus Manager so that you can run it with local IIS and/or IIS Express.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publisher": "lextudio",
   "engines": {
     "vscode": "^1.43.0"
@@ -87,13 +87,13 @@
           "iis.configDir": {
             "type": "string",
             "default": "",
-            "description": "Selected IIS configuration file.",
+            "description": "The folder that contains the selected config file. Leave it empty to use a temp folder with a default config file.",
             "scope": "resource"
           },
           "iis.browser": {
             "type": "string",
             "default": "",
-            "description": "The browser to use for IIS.",
+            "description": "The browser to open web pages. Typical values are \"chrome\", \"firefox\", \"msedge\", \"opera\". Leave it empty to use the default browser.",
             "scope": "resource"
           }
         }

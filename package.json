@@ -45,17 +45,41 @@
     "commands": [
       {
         "command": "iis.launch",
-        "title": "Launch IIS/IIS Express for this web project",
+        "title": "Launch IIS/IIS Express from here",
         "category": "IIS/IIS Express",
         "enablement": "iis.supported"
       },
       {
         "command": "iis.resetStatus",
-        "title": "Reset IIS/IIS Express configuration file selection",
+        "title": "Reset IIS/IIS Express selected config file",
         "category": "IIS/IIS Express",
         "enablement": "iis.supported"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "iis.launch",
+          "when": "iis.singleFolder"
+        },
+        {
+          "command": "iis.resetStatus",
+          "when": "iis.singleFolder"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "iis.launch",
+          "group": "IIS",
+          "when": "iis.supported"
+        },
+        {
+          "command": "iis.resetStatus",
+          "group": "IIS",
+          "when": "iis.supported"
+        }
+      ]
+    },
     "configuration": [
       {
         "title": "IIS",
@@ -64,13 +88,13 @@
             "type": "string",
             "default": "",
             "description": "Selected IIS configuration file.",
-            "scope": "window"
+            "scope": "resource"
           },
           "iis.browser": {
             "type": "string",
             "default": "",
             "description": "The browser to use for IIS.",
-            "scope": "window"
+            "scope": "resource"
           }
         }
       }

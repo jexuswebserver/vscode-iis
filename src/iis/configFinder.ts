@@ -19,12 +19,7 @@ export class ServerHostingConfig implements QuickPickItem {
 /**
  * Returns a list of applicationHost.config files in the workspace
  */
-export async function findConfigFiles(): Promise<string[]> {
-    if (!workspace.workspaceFolders) {
-        return [];
-    }
-
-    const root = workspace.workspaceFolders[0];
+export async function findConfigFiles(root: WorkspaceFolder): Promise<string[]> {
     const files = await workspace.findFiles('**/*.config', '.iis/*');
     const items = files.filter(file => file.fsPath.toLowerCase().endsWith('applicationhost.config'));
     return urisToPaths(items, root);

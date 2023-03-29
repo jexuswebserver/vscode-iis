@@ -1,4 +1,4 @@
-import { ExtensionContext, workspace } from "vscode";
+import { ExtensionContext, Uri, workspace } from "vscode";
 import { Configuration } from "../util/configuration";
 
 import { spawn } from "child_process";
@@ -8,52 +8,71 @@ import xml2js = require("xml2js");
 import { Logger } from "../util/logger";
 import { learnMore } from "../util/messages";
 
-export async function launchJexusManager(context: ExtensionContext, logger: Logger) {
+export async function launchJexusManager(
+    context: ExtensionContext,
+    logger: Logger,
+    resource: Uri
+) {
     // The code you place here will be executed every time your command is executed
     // Display a message box to the user
-    var configPath = Configuration.getConfigPath();
-    if (configPath === '') {
-        if (workspace.workspaceFolders) {
-            const currentFolder = workspace.workspaceFolders[0].uri.fsPath;
-            const template = path.join(context.extensionPath, 'applicationhost.config');
-            const target = path.join(currentFolder, ".iis", "applicationhost.config");
-            try {
-                const data = await fs.promises.readFile(fs.existsSync(target) ? target : template);
-                const parser = new xml2js.Parser();
-                const builder = new xml2js.Builder();
-                const result = await parser.parseStringPromise(data);
-                result.configuration['system.applicationHost'][0].sites[0].site[0].application[0].virtualDirectory[0].$.physicalPath = currentFolder;
-                const xml = builder.buildObject(result);
-                configPath = path.dirname(target);
-                await fs.promises.mkdir(configPath, { recursive: true });
-                await fs.promises.writeFile(target, xml);
-            } catch (err) {
-                learnMore('Working directory update failed');
-                logger.appendLine(`Unexpected error ${err}`);
-            }
+    var configPath = Configuration.getConfigPath(resource);
+    if (configPath === "") {
+        const currentFolder = workspace.getWorkspaceFolder(resource);
+        const template = path.join(
+            context.extensionPath,
+            "applicationhost.config"
+        );
+        const target = path.join(
+            currentFolder!.uri.fsPath,
+            ".iis",
+            "applicationhost.config"
+        );
+        try {
+            const data = await fs.promises.readFile(
+                fs.existsSync(target) ? target : template
+            );
+            const parser = new xml2js.Parser();
+            const builder = new xml2js.Builder();
+            const result = await parser.parseStringPromise(data);
+            result.configuration[
+                "system.applicationHost"
+            ][0].sites[0].site[0].application[0].virtualDirectory[0].$.physicalPath =
+                currentFolder;
+            const xml = builder.buildObject(result);
+            configPath = path.dirname(target);
+            await fs.promises.mkdir(configPath, { recursive: true });
+            await fs.promises.writeFile(target, xml);
+        } catch (err) {
+            learnMore("Working directory update failed");
+            logger.appendLine(`Unexpected error ${err}`);
         }
     }
 
-    const programFilesPath = process.env['ProgramFiles'];
+    logger.appendLine(`Config path: ${configPath}`);
+    const programFilesPath = process.env["ProgramFiles"];
     if (!programFilesPath) {
-        learnMore('Cannot detect Program Files');
-        logger.appendLine('Could not find Program Files directory');
+        learnMore("Cannot detect Program Files");
+        logger.appendLine("Could not find Program Files directory");
         return;
     }
 
-    const jexusManagerPath =path.join(programFilesPath, 'Jexus Manager', 'JexusManager.exe');
+    const jexusManagerPath = path.join(
+        programFilesPath,
+        "Jexus Manager",
+        "JexusManager.exe"
+    );
     if (!fs.existsSync(jexusManagerPath)) {
-        learnMore('Jexus Manager isn\'t installed');
+        learnMore("Jexus Manager isn't installed");
         return;
     }
-    const browser = Configuration.getBrowser();
-    const args = [path.join(configPath, 'applicationHost.config')];
+    const browser = Configuration.getBrowser(resource);
+    const args = [path.join(configPath, "applicationHost.config")];
     const options = {
         cwd: path.dirname(jexusManagerPath),
         env: {
             ...process.env,
-            JEXUSMANAGER_BROWSER: browser
-        }
+            JEXUSMANAGER_BROWSER: browser,
+        },
     };
 
     spawn(jexusManagerPath, args, options);

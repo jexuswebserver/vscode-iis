@@ -1,34 +1,57 @@
-'use strict';
+"use strict";
 
-import {
-    workspace, WorkspaceFolder
-} from 'vscode';
+import { Uri, workspace } from "vscode";
 
 export class Configuration {
-    public static getConfigPath(): string {
-        return Configuration.loadSetting('configDir', '', true, 'iis');
+    public static getConfigPath(resource: Uri): string {
+        return Configuration.loadSetting(
+            "configDir",
+            "",
+            true,
+            "iis",
+            resource
+        );
     }
 
-    public static getBrowser(): string {
-        return Configuration.loadSetting('browser', '', true, 'iis');
+    public static getBrowser(resource: Uri): string {
+        return Configuration.loadSetting("browser", "", true, "iis", resource);
     }
 
-    public static async setConfigPath(value: string, insertMacro: boolean): Promise<string | undefined> {
-        return await Configuration.saveSetting('configDir', value, insertMacro, 'iis');
+    public static async setConfigPath(
+        value: string,
+        insertMacro: boolean,
+        resource: Uri
+    ): Promise<string | undefined> {
+        return await Configuration.saveSetting(
+            "configDir",
+            value,
+            insertMacro,
+            "iis",
+            resource
+        );
     }
 
     private static loadAnySetting<T>(
-        configSection: string, defaultValue: T, header: string = 'iis',
+        configSection: string,
+        defaultValue: T,
+        header: string = "iis",
+        resource: Uri | undefined = undefined
     ): T {
-        return workspace.getConfiguration(header, null).get(configSection, defaultValue);
+        return workspace
+            .getConfiguration(header, resource)
+            .get(configSection, defaultValue);
     }
 
     private static async saveAnySetting<T>(
-        configSection: string, value: T, header: string = 'iis',
+        configSection: string,
+        value: T,
+        header: string = "iis",
+        resource: Uri | undefined = undefined
     ): Promise<T | undefined> {
-        if (workspace.workspaceFolders)
-        {
-            await workspace.getConfiguration(header, null).update(configSection, value);
+        if (workspace.workspaceFolders) {
+            await workspace
+                .getConfiguration(header, resource)
+                .update(configSection, value);
             return value;
         }
     }
@@ -37,88 +60,72 @@ export class Configuration {
         configSection: string,
         defaultValue: string,
         expand: boolean = true,
-        header: string = 'iis'
+        header: string = "iis",
+        resource: Uri
     ): string {
-        const result = this.loadAnySetting<string>(configSection, defaultValue, header);
-        if (expand && result != null) {
-            return this.expandMacro(result);
+        const result = this.loadAnySetting<string>(
+            configSection,
+            defaultValue,
+            header,
+            resource
+        );
+        if (expand && result !== null) {
+            return this.expandMacro(result, resource);
         }
 
         return result;
     }
 
     private static async saveSetting(
-        configSection: string, value: string, insertMacro: boolean = false, header: string = 'iis',
+        configSection: string,
+        value: string,
+        insertMacro: boolean = false,
+        header: string = "iis",
+        resource: Uri
     ): Promise<string | undefined> {
         if (insertMacro) {
-            value = this.insertMacro(value);
+            value = this.insertMacro(value, resource);
         }
-        return await this.saveAnySetting<string>(configSection, value, header);
+        return await this.saveAnySetting<string>(
+            configSection,
+            value,
+            header,
+            resource
+        );
     }
 
-    private static insertMacro(input: string): string {
-
-        let path: string | undefined;
-        if (!workspace.workspaceFolders) {
-            path = workspace.rootPath;
-        } else {
-            let root: WorkspaceFolder | undefined;
-            if (workspace.workspaceFolders.length === 1) {
-                root = workspace.workspaceFolders[0];
-            }
-            path = root ? root.uri.fsPath : undefined;
-        }
-
+    private static insertMacro(input: string, resource: Uri): string {
+        let path = workspace.getWorkspaceFolder(resource)!.uri.fsPath;
         if (path && input.startsWith(path)) {
-            return input
-                .replace(path, '${workspaceFolder}');
+            return input.replace(path, "${workspaceFolder}");
         }
         return input;
     }
 
-    public static expandMacro(input: string): string {
-        if (input.indexOf('${') === -1) {
+    public static expandMacro(input: string, resource: Uri): string {
+        if (input.indexOf("${") === -1) {
             return input;
         }
 
         let expanded: string;
-        if (input.indexOf('${env:') > -1) {
-            expanded = input.replace(/\$\{env\:(.+)\}/, (_match, p1)=>
-                {
-                    const variable = process.env[p1];
-                    return variable ?? '';
-                });
+        if (input.indexOf("${env:") > -1) {
+            expanded = input.replace(/\$\{env\:(.+)\}/, (_match, p1) => {
+                const variable = process.env[p1];
+                return variable ?? "";
+            });
         } else {
             expanded = input;
         }
 
-        if (expanded.indexOf('${') > -1) {
-            const path = this.GetRootPath();
+        if (expanded.indexOf("${") > -1) {
+            const path = workspace.getWorkspaceFolder(resource)!.uri.fsPath;
             if (path) {
                 return expanded
-                    .replace('${workspaceRoot}', path)
-                    .replace('${workspaceFolder}', path);
+                    .replace("${workspaceRoot}", path)
+                    .replace("${workspaceFolder}", path);
             }
         }
 
         return expanded;
-    }
-
-    public static GetRootPath(): string | undefined {
-        if (!workspace.workspaceFolders) {
-            return workspace.rootPath;
-        }
-
-        let root: WorkspaceFolder | undefined;
-        if (workspace.workspaceFolders.length === 1) {
-            root = workspace.workspaceFolders[0];
-        } else {
-            root = undefined
-        }
-
-        if (root) {
-            return root.uri.fsPath;
-        }
-        return undefined;
     }
 }

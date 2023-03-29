@@ -17,13 +17,13 @@ export async function launchJexusManager(
     // Display a message box to the user
     var configPath = Configuration.getConfigPath(resource);
     if (configPath === "") {
-        const currentFolder = workspace.getWorkspaceFolder(resource);
+        const currentFolder = workspace.getWorkspaceFolder(resource)!.uri.fsPath;
         const template = path.join(
             context.extensionPath,
             "applicationhost.config"
         );
         const target = path.join(
-            currentFolder!.uri.fsPath,
+            currentFolder,
             ".iis",
             "applicationhost.config"
         );

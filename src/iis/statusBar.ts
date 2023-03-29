@@ -57,8 +57,17 @@ export default class ServerHostingStatus {
     }
 
     public async reset(resource: vscode.Uri) {
-        if (!this.singleFolder) {
+        if (!vscode.workspace.workspaceFolders) {
             return;
+        }
+
+        if (JSON.stringify(resource) === "{}") {
+            vscode.window.showErrorMessage("Please select a folder to launch IIS/IIS Express.");
+            return;
+        }
+
+        if (!resource) {
+            resource = vscode.workspace.workspaceFolders![0].uri;
         }
 
         this.logger.appendLine("[preview] reset config.");

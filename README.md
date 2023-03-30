@@ -1,6 +1,6 @@
 # IIS and IIS Express extension for Visual Studio Code
 
-This extension gives you the power to run a folder open in Visual Studio Code as a website using IIS and/or IIS Express web server.
+This extension gives you the power to run web apps from a folder opened in Visual Studio Code using IIS/IIS Express web server.
 
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
@@ -29,8 +29,8 @@ To learn more about Jexus Manager, you can visit [its documentation site](https:
 
 Use `View | Command Pallette...` to open the command list and search for the commands below,
 
-* **Launch IIS/IIS Express for this web project** - Start Jexus Manager to perform IIS/IIS Express actions.
-* **Reset IIS/IIS Express configuration file selection** - Change the config file Jexus Manager should use.
+* **Launch IIS/IIS Express from here** - Start Jexus Manager to perform IIS/IIS Express actions.
+* **Reset IIS/IIS Express selected config file** - Change the config file Jexus Manager should use.
 
 ## Known Issues
 

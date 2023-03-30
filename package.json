@@ -10,7 +10,9 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "homepage": "https://docs.jexusmanager.com/getting-started/features.html",
   "categories": [
-    "Other"
+    "Other",
+    "Testing",
+    "Education"
   ],
   "keywords": [
     "IIS",
@@ -54,17 +56,37 @@
         "title": "Reset IIS/IIS Express selected config file",
         "category": "IIS/IIS Express",
         "enablement": "iis.supported"
+      },
+      {
+        "command": "iis.syncStatus",
+        "title": "Sync IIS/IIS Express selected config file when active folder changed",
+        "category": "IIS/IIS Express",
+        "enablement": "iis.supported"
+      },
+      {
+        "command": "iis.resetFolder",
+        "title": "Reset active folder",
+        "category": "IIS/IIS Express",
+        "enablement": "iis.supported"
       }
     ],
     "menus": {
       "commandPalette": [
         {
           "command": "iis.launch",
-          "when": "iis.singleFolder"
+          "when": "iis.supported"
         },
         {
           "command": "iis.resetStatus",
-          "when": "iis.singleFolder"
+          "when": "iis.supported"
+        },
+        {
+          "command": "iis.syncStatus",
+          "when": "false"
+        },
+        {
+          "command": "iis.resetFolder",
+          "when": "iis.supported"
         }
       ],
       "explorer/context": [
@@ -75,6 +97,11 @@
         },
         {
           "command": "iis.resetStatus",
+          "group": "IIS",
+          "when": "iis.supported"
+        },
+        {
+          "command": "iis.resetFolder",
           "group": "IIS",
           "when": "iis.supported"
         }
@@ -95,6 +122,12 @@
             "default": "",
             "description": "The browser to open web pages. Typical values are \"chrome\", \"firefox\", \"msedge\", \"opera\". Leave it empty to use the default browser.",
             "scope": "resource"
+          },
+          "iis.activeFolder": {
+            "type": "string",
+            "default": "",
+            "description": "The folder that shows the selected config file in status bar. Leave it empty to use the first folder in the workspace.",
+            "scope": "window"
           }
         }
       }

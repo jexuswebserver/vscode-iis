@@ -3,6 +3,10 @@
 import { Uri, workspace } from "vscode";
 
 export class Configuration {
+    public static getActiveFolder(): string {
+        return Configuration.loadAnySetting<string>("activeFolder", "", "iis");
+    }
+
     public static getConfigPath(resource: Uri): string {
         return Configuration.loadSetting(
             "configDir",
@@ -15,6 +19,12 @@ export class Configuration {
 
     public static getBrowser(resource: Uri): string {
         return Configuration.loadSetting("browser", "", true, "iis", resource);
+    }
+
+    public static async setActiveFolder(
+        value: string
+    ): Promise<string | undefined> {
+        return Configuration.saveAnySetting("activeFolder", value, "iis");
     }
 
     public static async setConfigPath(

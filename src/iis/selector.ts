@@ -26,14 +26,14 @@ export class ServerHostingSelector {
             // directories (useful when opening a single file, not a workspace)
             const pathsToAdd: string[] = await findConfigFiles(workspaceRoot!);
             for (const confPath of pathsToAdd) {
-                const pth = path.normalize(confPath);
+                const pth = path.dirname(path.normalize(confPath));
                 if (!pathStrings.includes(pth)) {
                     const qp = new ServerHostingConfig();
-                    qp.label = `$(gear) Use IIS Express: ${pth}`;
-                    qp.tooltip = `Click to reset. Full path: ${pth}`;
-                    qp.configDirectory = path.dirname(pth);
+                    qp.label = `$(gear) Use config file in ${pth}`;
+                    qp.tooltip = `Full path ${pth}. Click to reset.`;
+                    qp.configDirectory = pth;
                     qp.workspaceRoot = workspaceRoot!.uri.fsPath;
-                    qp.shortLabel = `$(gear) IIS Express: ${shrink(pth)}`;
+                    qp.shortLabel = `$(gear) Config file in ${shrink(pth)}`;
                     configurations.push(qp);
                     pathStrings.push(pth);
                 }
@@ -41,21 +41,18 @@ export class ServerHostingSelector {
         }
 
         logger.appendLine(
-            "[preview] Found applicationHost.config paths: " +
+            "[preview] Found applicationHost.config in paths: " +
                 JSON.stringify(pathStrings)
         );
 
-        const fullPathSelected = path.join(
-            path.normalize(selected),
-            "applicationHost.config"
-        );
+        const fullPathSelected = path.normalize(selected);
         const configSelected = new ServerHostingConfig();
-        configSelected.label = `\$(gear) Use IIS Express: ${fullPathSelected}`;
-        configSelected.tooltip = `Click to reset. Full path: ${fullPathSelected}`;
+        configSelected.label = `\$(gear) Use config file in ${fullPathSelected}`;
+        configSelected.tooltip = `Full path ${fullPathSelected}. Click to reset.`;
         configSelected.description += " (from iis.configPath setting)";
-        configSelected.configDirectory = path.dirname(fullPathSelected);
+        configSelected.configDirectory = fullPathSelected;
         configSelected.workspaceRoot = workspaceRoot!.uri.fsPath;
-        configSelected.shortLabel = `\$(gear) IIS Express: ${shrink(
+        configSelected.shortLabel = `\$(gear) Config file in ${shrink(
             fullPathSelected
         )}`;
 
@@ -64,15 +61,14 @@ export class ServerHostingSelector {
                 configurations.push(configSelected);
             } else {
                 const configDefault = new ServerHostingConfig();
-                configDefault.label =
-                    "$(file-text) Use IIS Express: .iis\\applicationhost.config";
-                configDefault.tooltip = "Click to reset";
+                configDefault.label = "$(file-text) Use config file in .iis";
+                configDefault.tooltip =
+                    "A temporary config file in .iis. Click to reset.";
                 configDefault.description =
-                    "Use IIS Express with .iis\\applicationhost.config";
+                    "Use a temporary config file in .iis";
                 configDefault.configDirectory = "";
                 configDefault.workspaceRoot = workspaceRoot!.uri.fsPath;
-                configDefault.shortLabel =
-                    "$(file-text) IIS Express: .iis\\applicationhost.config";
+                configDefault.shortLabel = "$(file-text) Config file in .iis";
                 configurations.push(configDefault);
             }
         }

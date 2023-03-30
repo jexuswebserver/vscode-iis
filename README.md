@@ -14,6 +14,8 @@ This is a **free extension**. If you find it useful to yourself or your business
 ## Features
 
 * Detect and launch Jexus Manager to enable the opened project on IIS/IIS Express web server.
+* Multiple folders/workspace is fully supported.
+* Full access to most IIS/IIS Express configuration options.
 
 To learn more about Jexus Manager, you can visit [its documentation site](https://docs.jexusmanager.com/index.html).
 

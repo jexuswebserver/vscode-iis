@@ -1,27 +1,32 @@
-'use strict';
+"use strict";
 
-import * as fs from 'fs';
-import * as path from 'path';
-import { QuickPickItem, Uri, workspace, WorkspaceFolder } from 'vscode';
+import * as fs from "fs";
+import * as path from "path";
+import { QuickPickItem, Uri, workspace, WorkspaceFolder } from "vscode";
 
 /**
  * Configuration for how to launch IIS Express using applicationHost.config.
  */
 export class ServerHostingConfig implements QuickPickItem {
-    public label: string = '';
-    public tooltip: string = '';
-    public description: string = 'Use IIS Express with the selected applicationHost.config path';
-    public configDirectory: string = '';
+    public label: string = "";
+    public tooltip: string = "";
+    public description: string =
+        "Use IIS Express with the selected applicationHost.config path";
+    public configDirectory: string = "";
     public workspaceRoot: string | undefined;
-    public shortLabel: string = '';
+    public shortLabel: string = "";
 }
 
 /**
  * Returns a list of applicationHost.config files in the workspace
  */
-export async function findConfigFiles(root: WorkspaceFolder): Promise<string[]> {
-    const files = await workspace.findFiles('**/*.config', '.iis/*');
-    const items = files.filter(file => file.fsPath.toLowerCase().endsWith('applicationhost.config'));
+export async function findConfigFiles(
+    root: WorkspaceFolder
+): Promise<string[]> {
+    const files = await workspace.findFiles("**/*.config", ".iis/*");
+    const items = files.filter((file) =>
+        file.fsPath.toLowerCase().endsWith("applicationhost.config")
+    );
     return urisToPaths(items, root);
 }
 
@@ -48,20 +53,23 @@ export function findConfigFilesInParentDirs(filePath: string): string[] {
     let dirName = filePath;
     while (true) {
         // Get the name of the parent directory
-        const parentDir = path.normalize(dirName + '/..');
+        const parentDir = path.normalize(dirName + "/..");
 
-        // Check if we are at the root directory already to avoid an infinte loop
+        // Check if we are at the root directory already to avoid an infinite loop
         if (parentDir === dirName) {
             break;
         }
 
         // Sanity check - the parent directory must exist
-        if (!fs.existsSync(parentDir) || !fs.statSync(parentDir).isDirectory()) {
+        if (
+            !fs.existsSync(parentDir) ||
+            !fs.statSync(parentDir).isDirectory()
+        ) {
             break;
         }
 
         // Check this directory for applicationHost.config
-        const configPath = path.join(parentDir, 'applicationHost.config');
+        const configPath = path.join(parentDir, "applicationHost.config");
         if (fs.existsSync(configPath) && fs.statSync(configPath).isFile()) {
             paths.push(configPath);
         }

@@ -40,8 +40,13 @@
     "languages": [
       {
         "id": "iis-config",
-        "extensions": [ ".config" ],
-        "aliases": [ "IIS Configuration File", "IIS Express Configuration File" ]
+        "extensions": [
+          ".config"
+        ],
+        "aliases": [
+          "IIS Configuration File",
+          "IIS Express Configuration File"
+        ]
       }
     ],
     "commands": [
@@ -141,7 +146,8 @@
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint src --ext ts --fix --format=visualstudio",
+    "format": "npx prettier --write \"src/**/*.{ts,js,json,css,md}\"",
     "test": "node ./out/test/runTest.js",
     "dist": "vsce package --allow-star-activation --yarn"
   },
@@ -155,8 +161,11 @@
     "@typescript-eslint/parser": "^5.53.0",
     "@vscode/test-electron": "^2.2.3",
     "eslint": "^8.34.0",
+    "eslint-plugin": "^1.0.1",
     "glob": "^8.1.0",
+    "husky": "^8.0.3",
     "mocha": "^10.2.0",
+    "prettier": "^2.8.7",
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.5",
     "vsce": "^2.15.0",
@@ -165,5 +174,10 @@
   },
   "dependencies": {
     "xml2js": "^0.4.23"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run lint && yarn run format"
+    }
   }
 }

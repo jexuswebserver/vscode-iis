@@ -17,7 +17,8 @@ export async function launchJexusManager(
     // Display a message box to the user
     var configPath = Configuration.getConfigPath(resource);
     if (configPath === "") {
-        const currentFolder = workspace.getWorkspaceFolder(resource)!.uri.fsPath;
+        const currentFolder =
+            workspace.getWorkspaceFolder(resource)!.uri.fsPath;
         const template = path.join(
             context.extensionPath,
             "applicationhost.config"
@@ -71,6 +72,7 @@ export async function launchJexusManager(
         cwd: path.dirname(jexusManagerPath),
         env: {
             ...process.env,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             JEXUSMANAGER_BROWSER: browser,
         },
     };

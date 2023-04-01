@@ -6,8 +6,8 @@
 import * as vscode from "vscode";
 
 export enum Trace {
-    Off,
-    Verbose,
+    off,
+    verbose,
 }
 
 export namespace Trace {
@@ -15,11 +15,11 @@ export namespace Trace {
         value = value.toLowerCase();
         switch (value) {
             case "off":
-                return Trace.Off;
+                return Trace.off;
             case "verbose":
-                return Trace.Verbose;
+                return Trace.verbose;
             default:
-                return Trace.Off;
+                return Trace.off;
         }
     }
 }
@@ -48,7 +48,7 @@ export class Logger {
     }
 
     public log(message: string, data?: any): void {
-        if (this.trace === Trace.Verbose) {
+        if (this.trace === Trace.verbose) {
             this.appendLine(
                 `[Log - ${new Date().toLocaleTimeString()}] ${message}`
             );

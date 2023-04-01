@@ -3,15 +3,16 @@
 import * as fs from "fs";
 import * as path from "path";
 import { QuickPickItem, Uri, workspace, WorkspaceFolder } from "vscode";
+import { textConfigFileDescription, textConfigFileName, textFindExclude, textFindInclude } from "../util/constants";
 
 /**
  * Configuration for how to launch IIS Express using applicationHost.config.
  */
-export class ServerHostingConfig implements QuickPickItem {
+export class ConfigFileOption implements QuickPickItem {
     public label: string = "";
     public tooltip: string = "";
     public description: string =
-        "Use IIS Express with the selected applicationHost.config path";
+        textConfigFileDescription;
     public configDirectory: string = "";
     public workspaceRoot: string | undefined;
     public shortLabel: string = "";
@@ -23,9 +24,9 @@ export class ServerHostingConfig implements QuickPickItem {
 export async function findConfigFiles(
     root: WorkspaceFolder
 ): Promise<string[]> {
-    const files = await workspace.findFiles("**/*.config", ".iis/*");
+    const files = await workspace.findFiles(textFindInclude, textFindExclude);
     const items = files.filter((file) =>
-        file.fsPath.toLowerCase().endsWith("applicationhost.config")
+        file.fsPath.toLowerCase().endsWith(textConfigFileName)
     );
     return urisToPaths(items, root);
 }
@@ -68,8 +69,8 @@ export function findConfigFilesInParentDirs(filePath: string): string[] {
             break;
         }
 
-        // Check this directory for applicationHost.config
-        const configPath = path.join(parentDir, "applicationHost.config");
+        // Check this directory for config file
+        const configPath = path.join(parentDir, textConfigFileName);
         if (fs.existsSync(configPath) && fs.statSync(configPath).isFile()) {
             paths.push(configPath);
         }

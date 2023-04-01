@@ -2,9 +2,10 @@
 
 import vscode = require("vscode");
 import { Configuration } from "../util/configuration";
-import { ServerHostingSelector } from "./selector";
-import { ServerHostingConfig } from "./configFinder";
+import { ConfigFileSelector } from "./selector";
+import { ConfigFileOption } from "./configFinder";
 import { Logger } from "../util/logger";
+import { commandResetActiveFolder, commandResetSelectedFile, commandSyncSelectedFile } from "../util/constants";
 
 export class ActiveFolderStatus {
     private _statusBarItem: vscode.StatusBarItem;
@@ -15,7 +16,7 @@ export class ActiveFolderStatus {
         this._statusBarItem = vscode.window.createStatusBarItem(
             vscode.StatusBarAlignment.Left
         );
-        this._statusBarItem.command = "iis.resetFolder";
+        this._statusBarItem.command = commandResetActiveFolder;
         this.inReset = false;
         this.folder = Configuration.getActiveFolder();
     }
@@ -43,7 +44,7 @@ export class ActiveFolderStatus {
         try {
             await this.refreshFolder();
             this.setLabel();
-            vscode.commands.executeCommand("iis.syncStatus");
+            vscode.commands.executeCommand(commandSyncSelectedFile);
         } finally {
             this.inReset = false;
         }
@@ -86,14 +87,14 @@ export class ActiveFolderStatus {
  */
 export default class SelectedConfigFileStatus {
     private _statusBarItem: vscode.StatusBarItem;
-    public config: ServerHostingConfig | undefined;
+    public config: ConfigFileOption | undefined;
     private inReset: boolean;
 
     constructor(private logger: Logger, private singleFolder: boolean) {
         this._statusBarItem = vscode.window.createStatusBarItem(
             vscode.StatusBarAlignment.Left
         );
-        this._statusBarItem.command = "iis.resetStatus";
+        this._statusBarItem.command = commandResetSelectedFile;
         this.inReset = false;
     }
 
@@ -161,8 +162,8 @@ export default class SelectedConfigFileStatus {
 
     public async refreshConfig(
         resource: vscode.Uri
-    ): Promise<ServerHostingConfig | undefined> {
-        const configDir = await ServerHostingSelector.findConfigDir(
+    ): Promise<ConfigFileOption | undefined> {
+        const configDir = await ConfigFileSelector.findConfigDir(
             this.logger,
             this.inReset,
             resource

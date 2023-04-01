@@ -3,7 +3,7 @@
 import vscode = require("vscode");
 import { launchJexusManager } from "./iis/jexusManager";
 import SelectedConfigFileStatus, { ActiveFolderStatus } from "./iis/statusBar";
-import { homepage } from "./util/constants";
+import { textHomepage } from "./util/constants";
 import { Logger } from "./util/logger";
 import { learnMore } from "./util/messages";
 
@@ -16,7 +16,7 @@ export async function activate(
     const logger = new Logger(channel);
     logger.show();
     logger.appendLine(
-        `Please visit ${homepage} to learn how to configure the extension.`
+        `Please visit ${textHomepage} to learn how to configure the extension.`
     );
 
     const supported = await logger.logPlatform();

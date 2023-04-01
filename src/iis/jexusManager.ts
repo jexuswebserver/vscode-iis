@@ -7,6 +7,7 @@ import fs = require("fs");
 import xml2js = require("xml2js");
 import { Logger } from "../util/logger";
 import { learnMore } from "../util/messages";
+import { textConfigFileName } from "../util/constants";
 
 export async function launchJexusManager(
     context: ExtensionContext,
@@ -21,12 +22,12 @@ export async function launchJexusManager(
             workspace.getWorkspaceFolder(resource)!.uri.fsPath;
         const template = path.join(
             context.extensionPath,
-            "applicationhost.config"
+            textConfigFileName
         );
         const target = path.join(
             currentFolder,
             ".iis",
-            "applicationhost.config"
+            textConfigFileName
         );
         try {
             const data = await fs.promises.readFile(

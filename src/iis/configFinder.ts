@@ -1,46 +1,50 @@
-"use strict";
+'use strict';
 
-import * as fs from "fs";
-import * as path from "path";
-import { QuickPickItem, Uri, workspace, WorkspaceFolder } from "vscode";
-import { textConfigFileDescription, textConfigFileName, textFindExclude, textFindInclude } from "../util/constants";
+import * as fs from 'fs';
+import * as path from 'path';
+import {QuickPickItem, Uri, workspace, WorkspaceFolder} from 'vscode';
+import {
+  textConfigFileDescription,
+  textConfigFileName,
+  textFindExclude,
+  textFindInclude,
+} from '../util/constants';
 
 /**
  * Configuration for how to launch IIS Express using applicationHost.config.
  */
 export class ConfigFileOption implements QuickPickItem {
-    public label: string = "";
-    public tooltip: string = "";
-    public description: string =
-        textConfigFileDescription;
-    public configDirectory: string = "";
-    public workspaceRoot: string | undefined;
-    public shortLabel: string = "";
+  public label: string = '';
+  public tooltip: string = '';
+  public description: string = textConfigFileDescription;
+  public configDirectory: string = '';
+  public workspaceRoot: string | undefined;
+  public shortLabel: string = '';
 }
 
 /**
  * Returns a list of applicationHost.config files in the workspace
  */
 export async function findConfigFiles(
-    root: WorkspaceFolder
+  root: WorkspaceFolder
 ): Promise<string[]> {
-    const files = await workspace.findFiles(textFindInclude, textFindExclude);
-    const items = files.filter((file) =>
-        file.fsPath.toLowerCase().endsWith(textConfigFileName)
-    );
-    return urisToPaths(items, root);
+  const files = await workspace.findFiles(textFindInclude, textFindExclude);
+  const items = files.filter(file =>
+    file.fsPath.toLowerCase().endsWith(textConfigFileName)
+  );
+  return urisToPaths(items, root);
 }
 
 function urisToPaths(uris: Uri[], root: WorkspaceFolder): string[] {
-    const paths: string[] = [];
-    const workspaceFolder = root;
-    uris.forEach((uri) => {
-        const folder = workspace.getWorkspaceFolder(uri);
-        if (folder === workspaceFolder) {
-            paths.push(uri.fsPath);
-        }
-    });
-    return paths;
+  const paths: string[] = [];
+  const workspaceFolder = root;
+  uris.forEach(uri => {
+    const folder = workspace.getWorkspaceFolder(uri);
+    if (folder === workspaceFolder) {
+      paths.push(uri.fsPath);
+    }
+  });
+  return paths;
 }
 
 /**
@@ -48,35 +52,26 @@ function urisToPaths(uris: Uri[], root: WorkspaceFolder): string[] {
  * a single file is opened without a workspace
  */
 export function findConfigFilesInParentDirs(filePath: string): string[] {
-    const paths: string[] = [];
+  const paths: string[] = [];
 
-    // Walk the directory up from the current directory looking for the applicationHost.config file
-    let dirName = filePath;
-    while (true) {
-        // Get the name of the parent directory
-        const parentDir = path.normalize(dirName + "/..");
-
-        // Check if we are at the root directory already to avoid an infinite loop
-        if (parentDir === dirName) {
-            break;
-        }
-
-        // Sanity check - the parent directory must exist
-        if (
-            !fs.existsSync(parentDir) ||
-            !fs.statSync(parentDir).isDirectory()
-        ) {
-            break;
-        }
-
-        // Check this directory for config file
-        const configPath = path.join(parentDir, textConfigFileName);
-        if (fs.existsSync(configPath) && fs.statSync(configPath).isFile()) {
-            paths.push(configPath);
-        }
-
-        dirName = parentDir;
+  // Walk the directory up from the current directory looking for the applicationHost.config file
+  let dirName = filePath;
+  let parentDir = path.normalize(dirName + '/..');
+  while (parentDir !== dirName) {
+    // Sanity check - the parent directory must exist
+    if (!fs.existsSync(parentDir) || !fs.statSync(parentDir).isDirectory()) {
+      break;
     }
 
-    return paths;
+    // Check this directory for config file
+    const configPath = path.join(parentDir, textConfigFileName);
+    if (fs.existsSync(configPath) && fs.statSync(configPath).isFile()) {
+      paths.push(configPath);
+    }
+
+    dirName = parentDir;
+    parentDir = path.normalize(dirName + '/..');
+  }
+
+  return paths;
 }

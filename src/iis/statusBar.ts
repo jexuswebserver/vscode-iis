@@ -173,7 +173,7 @@ export default class SelectedConfigFileStatus {
 
     this.config = configDir;
     this.logger.appendLine(
-      '[preview] set config to ' + configDir.configDirectory
+      `[preview] set config to ${configDir.configDirectory}`
     );
     await Configuration.setConfigPath(
       configDir.configDirectory,

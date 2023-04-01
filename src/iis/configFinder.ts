@@ -1,7 +1,7 @@
 'use strict';
 
-import * as fs from 'fs';
-import * as path from 'path';
+import fs = require('fs');
+import path = require('path');
 import {QuickPickItem, Uri, workspace, WorkspaceFolder} from 'vscode';
 import {
   textConfigFileDescription,
@@ -28,7 +28,11 @@ export class ConfigFileOption implements QuickPickItem {
 export async function findConfigFiles(
   root: WorkspaceFolder
 ): Promise<string[]> {
-  const files = await workspace.findFiles(textFindInclude, textFindExclude);
+  const files = await workspace.findFiles(
+    textFindInclude,
+    textFindExclude,
+    100
+  );
   const items = files.filter(file =>
     file.fsPath.toLowerCase().endsWith(textConfigFileName)
   );

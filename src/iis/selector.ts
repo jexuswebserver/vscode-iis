@@ -82,7 +82,7 @@ export class ConfigFileSelector {
     if (configurations.length === 1) {
       if (inReset) {
         window.showInformationMessage(
-          'A single config file detected. No other files to select.'
+          'A single config file detected. No other files to select from.'
         );
       }
       return configurations[0];
@@ -104,5 +104,7 @@ function shrink(path: string) {
     return path;
   }
 
-  return `...${path.substring(path.length - numberShrinkThreshold + 3)}`;
+  return `...${path.substring(
+    path.length - numberShrinkThreshold + '...'.length
+  )}`;
 }

@@ -82,7 +82,9 @@ export class ConfigFileSelector {
     if (configurations.length === 1) {
       if (inReset) {
         window.showInformationMessage(
-          'A single config file detected. No other files to select from.'
+          configurations[0].configDirectory === ''
+            ? 'No config file to select. Fall back to a temporary config file in .iis.'
+            : 'A single config file detected. No other files to select from.'
         );
       }
       return configurations[0];

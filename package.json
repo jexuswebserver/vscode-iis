@@ -148,7 +148,7 @@
     "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
     "lint": "gts lint",
     "test": "node ./out/test/runTest.js",
-    "dist": "vsce package --allow-star-activation --yarn",
+    "dist": "yarn install && vsce package --allow-star-activation --yarn",
     "clean": "gts clean",
     "fix": "gts fix",
     "prepare": "yarn run compile",

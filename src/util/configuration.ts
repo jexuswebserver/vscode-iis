@@ -3,6 +3,17 @@
 import {Uri, workspace} from 'vscode';
 
 export class Configuration {
+  public static getActiveResource(): Uri {
+    let result = workspace.workspaceFolders![0].uri;
+    if (workspace.workspaceFolders!.length > 1) {
+      const activeFolder = Configuration.getActiveFolder();
+      result = workspace.workspaceFolders!.find(
+        folder => folder.name === activeFolder
+      )!.uri;
+    }
+    return result;
+  }
+
   public static getActiveFolder(): string {
     return Configuration.loadAnySetting<string>('activeFolder', '', 'iis');
   }

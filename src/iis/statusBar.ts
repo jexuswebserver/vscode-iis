@@ -110,14 +110,7 @@ export default class SelectedConfigFileStatus {
   }
 
   public async update() {
-    let resource = vscode.workspace.workspaceFolders![0].uri;
-    if (!this.singleFolder) {
-      const folder = Configuration.getActiveFolder();
-      resource = vscode.workspace.workspaceFolders!.find(
-        item => item.name === folder
-      )!.uri;
-    }
-
+    const resource = Configuration.getActiveResource();
     const workspaceRoot = resource.fsPath;
     if (!this.config || this.config.workspaceRoot !== workspaceRoot) {
       await this.refreshConfig(resource);
@@ -139,16 +132,7 @@ export default class SelectedConfigFileStatus {
       return;
     }
 
-    if (!resource) {
-      resource = vscode.workspace.workspaceFolders![0].uri;
-      if (!this.singleFolder) {
-        const folder = Configuration.getActiveFolder();
-        resource = vscode.workspace.workspaceFolders!.find(
-          item => item.name === folder
-        )!.uri;
-      }
-    }
-
+    resource = resource ?? Configuration.getActiveResource();
     this.logger.appendLine('[preview] reset config.');
     this.inReset = true;
     try {

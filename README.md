@@ -15,14 +15,14 @@ This is a **free extension**. If you find it useful to yourself or your business
 ## Features
 
 * Detect and launch Jexus Manager to enable the opened project on IIS/IIS Express web server.
-* Multiple folders/workspace is fully supported.
-* Full access to most IIS/IIS Express configuration options.
+* Multiple-folder workspace is fully supported.
+* Access to most IIS/IIS Express configuration options.
 * ASP.NET/ASP.NET Core/Blazor projects are fully supported.
 * PHP support can be enabled manually.
-* Node.js, Python, Ruby, and Go support can be enabled by adding HttpPlatformHandler to IIS Express.
+* Node.js, Java, Python, Ruby, and Go support can be enabled by [adding HttpPlatformHandler to IIS Express](https://github.com/lextm/iisexpress-httpplatformhandler).
 * CORS support can be enabled by [adding IIS CORS module to IIS Express](https://github.com/lextm/iisexpress-cors).
 
-To learn more about Jexus Manager, you can visit [its documentation site](https://docs.jexusmanager.com/index.html).
+To learn more about Jexus Manager, you can visit [its documentation site](https://docs.jexusmanager.com/).
 
 ![VS Code](images/vscode-iis.gif)
 
@@ -30,7 +30,7 @@ To learn more about Jexus Manager, you can visit [its documentation site](https:
 
 * Windows
 * [Jexus Manager](https://github.com/jexuswebserver/JexusManager/releases)
-* IIS Express
+* [IIS Express](https://learn.microsoft.com/iis/extensions/introduction-to-iis-express/iis-express-overview#installing-iis-express)
 
 ## Available Commands
 

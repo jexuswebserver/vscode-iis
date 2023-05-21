@@ -2,9 +2,17 @@
 // Import the module and reference it with the alias vscode in your code below
 import vscode = require('vscode');
 import {launchJexusManager} from './iis/jexusManager';
-import SelectedConfigFileStatus, {ActiveFolderStatus} from './iis/statusBar';
+import SelectedConfigFileStatus, {
+  ActiveFolderStatus,
+  LaunchStatus,
+} from './iis/statusBar';
 import {updateActivationCount} from './rating';
-import {textHomepage} from './util/constants';
+import {
+  commandLaunch,
+  commandResetSelectedFile,
+  commandSyncSelectedFile,
+  textHomepage,
+} from './util/constants';
 import {Logger} from './util/logger';
 import {learnMore} from './util/messages';
 
@@ -55,6 +63,9 @@ export async function activate(
     await statusActiveFolder.update();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const statusLaunch = new LaunchStatus();
+
   // Status bar to show the selected config file configuration
   const statusSelectedConfigFile = new SelectedConfigFileStatus(
     logger,
@@ -64,14 +75,14 @@ export async function activate(
   // Hook up the status bar to change events
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      'iis.resetStatus',
+      commandResetSelectedFile,
       statusSelectedConfigFile.reset,
       statusSelectedConfigFile
     )
   );
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      'iis.syncStatus',
+      commandSyncSelectedFile,
       statusSelectedConfigFile.update,
       statusSelectedConfigFile
     )
@@ -80,7 +91,7 @@ export async function activate(
   await statusSelectedConfigFile.update();
 
   const disposable = vscode.commands.registerCommand(
-    'iis.launch',
+    commandLaunch,
     (resource: vscode.Uri) => {
       if (JSON.stringify(resource) !== '{}') {
         launchJexusManager(context, logger, resource);

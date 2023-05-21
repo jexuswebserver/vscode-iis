@@ -6,6 +6,7 @@ import {ConfigFileSelector} from './selector';
 import {ConfigFileOption} from './configFinder';
 import {Logger} from '../util/logger';
 import {
+  commandLaunch,
   commandResetActiveFolder,
   commandResetSelectedFile,
   commandSyncSelectedFile,
@@ -79,6 +80,20 @@ export class ActiveFolderStatus {
     this.logger.appendLine(`[preview] set folder to ${folder}`);
     await Configuration.setActiveFolder(folder);
     return folder;
+  }
+}
+
+export class LaunchStatus {
+  private _statusBarItem: vscode.StatusBarItem;
+
+  constructor() {
+    this._statusBarItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Left
+    );
+    this._statusBarItem.command = commandLaunch;
+    this._statusBarItem.text = '$(play)';
+    this._statusBarItem.tooltip = 'Launch IIS Express';
+    this._statusBarItem.show();
   }
 }
 

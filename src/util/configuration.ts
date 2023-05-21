@@ -111,7 +111,7 @@ export class Configuration {
   }
 
   private static insertMacro(input: string, resource: Uri): string {
-    const path = workspace.getWorkspaceFolder(resource)!.uri.fsPath;
+    const path = Configuration.getCurrentWorkspaceFolder(resource).uri.fsPath;
     if (path && input.startsWith(path)) {
       return input.replace(path, '${workspaceFolder}');
     }
@@ -134,7 +134,8 @@ export class Configuration {
     }
 
     if (expanded.indexOf('${') > -1) {
-      const path = workspace.getWorkspaceFolder(resource)!.uri.fsPath;
+      const path =
+        Configuration.getCurrentWorkspaceFolder(resource)!.uri.fsPath;
       if (path) {
         return expanded
           .replace('${workspaceRoot}', path)
@@ -143,5 +144,11 @@ export class Configuration {
     }
 
     return expanded;
+  }
+
+  public static getCurrentWorkspaceFolder(resource: Uri) {
+    return resource
+      ? workspace.getWorkspaceFolder(resource)!
+      : workspace.workspaceFolders![0];
   }
 }

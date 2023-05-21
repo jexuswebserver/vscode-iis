@@ -1,4 +1,4 @@
-import {ExtensionContext, Uri, workspace} from 'vscode';
+import {ExtensionContext, ProgressLocation, Uri, window} from 'vscode';
 import {Configuration} from '../util/configuration';
 
 import {spawn} from 'child_process';
@@ -18,7 +18,8 @@ export async function launchJexusManager(
   // Display a message box to the user
   let configPath = Configuration.getConfigPath(resource);
   if (configPath === '') {
-    const currentFolder = workspace.getWorkspaceFolder(resource)!.uri.fsPath;
+    const currentFolder =
+      Configuration.getCurrentWorkspaceFolder(resource)!.uri.fsPath;
     const template = path.join(context.extensionPath, textConfigFileName);
     const target = path.join(currentFolder, '.iis', textConfigFileName);
     try {
@@ -70,5 +71,32 @@ export async function launchJexusManager(
     },
   };
 
-  spawn(jexusManagerPath, args, options);
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: 'Jexus Manager is working',
+      cancellable: false,
+    },
+    () => {
+      return new Promise<void>((resolve, reject) => {
+        const child = spawn(jexusManagerPath, args, options);
+
+        child.on('error', error => {
+          window.showErrorMessage(
+            `Failed to launch Jexus Manager: ${error.message}`
+          );
+          reject(error);
+        });
+
+        child.on('close', code => {
+          if (code !== 0) {
+            window.showErrorMessage(`Jexus Manager exited with code: ${code}`);
+            reject(new Error(`Exit code: ${code}`));
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
+  );
 }

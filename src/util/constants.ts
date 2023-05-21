@@ -15,6 +15,7 @@ export const textFindInclude = '**/*.config';
 export const textFindExclude = '.iis/*';
 export const textConfigFileName = 'applicationhost.config';
 export const numberShrinkThreshold = 25;
+export const commandLaunch = 'iis.launch';
 export const commandResetSelectedFile = 'iis.resetStatus';
 export const commandSyncSelectedFile = 'iis.syncStatus';
 export const commandResetActiveFolder = 'iis.resetFolder';

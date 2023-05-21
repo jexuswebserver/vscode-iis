@@ -2,13 +2,13 @@
   "name": "iis",
   "displayName": "IIS and IIS Express extension for Visual Studio Code",
   "description": "IIS and IIS Express extension for Visual Studio Code. Quickly launch your project in Jexus Manager so that you can run it with local IIS and/or IIS Express.",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "publisher": "lextudio",
   "engines": {
     "vscode": "^1.43.0"
   },
   "license": "SEE LICENSE IN LICENSE.txt",
-  "homepage": "https://docs.jexusmanager.com/getting-started/features.html",
+  "homepage": "https://docs.jexusmanager.com/getting-started/vscode.html",
   "categories": [
     "Other",
     "Testing",

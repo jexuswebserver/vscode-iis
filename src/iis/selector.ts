@@ -36,11 +36,11 @@ export class ConfigFileSelector {
         const found = path.dirname(path.normalize(confPath));
         if (!pathStrings.includes(found)) {
           const option = new ConfigFileOption();
-          option.label = `$(gear) Use config file in ${found}`;
+          option.label = `$(gear) Use applicationhost.config in ${found}`;
           option.tooltip = `Full path ${found}. Click to reset.`;
           option.configDirectory = found;
           option.workspaceRoot = workspaceRoot!.uri.fsPath;
-          option.shortLabel = `$(gear) Config file in ${shrink(found)}`;
+          option.shortLabel = `$(gear) IIS config in ${shrink(found)}`;
           configurations.push(option);
           pathStrings.push(found);
         }
@@ -55,12 +55,12 @@ export class ConfigFileSelector {
 
     const fullPathSelected = path.normalize(selected);
     const configSelected = new ConfigFileOption();
-    configSelected.label = `$(gear) Use config file in ${fullPathSelected}`;
+    configSelected.label = `$(gear) Use applicationhost.config in ${fullPathSelected}`;
     configSelected.tooltip = `Full path ${fullPathSelected}. Click to reset.`;
     configSelected.description += textConfigFileSelectedPostfix;
     configSelected.configDirectory = fullPathSelected;
     configSelected.workspaceRoot = workspaceRoot!.uri.fsPath;
-    configSelected.shortLabel = `$(gear) Config file in ${shrink(
+    configSelected.shortLabel = `$(gear) IIS config in ${shrink(
       fullPathSelected
     )}`;
 

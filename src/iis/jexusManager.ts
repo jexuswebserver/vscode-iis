@@ -20,10 +20,11 @@ export async function launchJexusManager(
   if (configPath === '') {
     const currentFolder =
       Configuration.getCurrentWorkspaceFolder(resource)!.uri.fsPath;
-    const template = path.join(context.extensionPath, textConfigFileName);
     const target = path.join(currentFolder, '.iis', textConfigFileName);
+    configPath = path.dirname(target);
     if (!fs.existsSync(target)) {
       try {
+        const template = path.join(context.extensionPath, textConfigFileName);
         const data = await fs.promises.readFile(template);
         const parser = new xml2js.Parser();
         const builder = new xml2js.Builder();
@@ -33,7 +34,6 @@ export async function launchJexusManager(
         ][0].sites[0].site[0].application[0].virtualDirectory[0].$.physicalPath =
           currentFolder;
         const xml = builder.buildObject(result);
-        configPath = path.dirname(target);
         await fs.promises.mkdir(configPath, {recursive: true});
         await fs.promises.writeFile(target, xml);
         logger.appendLine(`Created ${target} from template`);

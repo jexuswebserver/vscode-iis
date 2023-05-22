@@ -22,24 +22,25 @@ export async function launchJexusManager(
       Configuration.getCurrentWorkspaceFolder(resource)!.uri.fsPath;
     const template = path.join(context.extensionPath, textConfigFileName);
     const target = path.join(currentFolder, '.iis', textConfigFileName);
-    try {
-      const data = await fs.promises.readFile(
-        fs.existsSync(target) ? target : template
-      );
-      const parser = new xml2js.Parser();
-      const builder = new xml2js.Builder();
-      const result = await parser.parseStringPromise(data);
-      result.configuration[
-        'system.applicationHost'
-      ][0].sites[0].site[0].application[0].virtualDirectory[0].$.physicalPath =
-        currentFolder;
-      const xml = builder.buildObject(result);
-      configPath = path.dirname(target);
-      await fs.promises.mkdir(configPath, {recursive: true});
-      await fs.promises.writeFile(target, xml);
-    } catch (err) {
-      learnMore('Working directory update failed');
-      logger.appendLine(`Unexpected error ${err}`);
+    if (!fs.existsSync(target)) {
+      try {
+        const data = await fs.promises.readFile(template);
+        const parser = new xml2js.Parser();
+        const builder = new xml2js.Builder();
+        const result = await parser.parseStringPromise(data);
+        result.configuration[
+          'system.applicationHost'
+        ][0].sites[0].site[0].application[0].virtualDirectory[0].$.physicalPath =
+          currentFolder;
+        const xml = builder.buildObject(result);
+        configPath = path.dirname(target);
+        await fs.promises.mkdir(configPath, {recursive: true});
+        await fs.promises.writeFile(target, xml);
+        logger.appendLine(`Created ${target} from template`);
+      } catch (err) {
+        learnMore('Working directory update failed');
+        logger.appendLine(`Unexpected error ${err}`);
+      }
     }
   }
 

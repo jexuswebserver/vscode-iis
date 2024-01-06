@@ -14,7 +14,6 @@ import {
   textHomepage,
 } from './util/constants';
 import {Logger} from './util/logger';
-import {learnMore} from './util/messages';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -23,7 +22,6 @@ export async function activate(
 ): Promise<void> {
   const channel = vscode.window.createOutputChannel('IIS');
   const logger = new Logger(channel);
-  logger.show();
   logger.appendLine(
     `Please visit ${textHomepage} to learn how to configure the extension.`
   );
@@ -43,7 +41,7 @@ export async function activate(
   );
 
   if (!supported) {
-    learnMore('This extension only works on Windows');
+    logger.appendLine('This extension only works on Windows');
     return;
   }
 

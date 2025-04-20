@@ -132,6 +132,11 @@ export async function activate(
     return;
   }
 
+  if (!folders) {
+    logger.appendLine('No workspace folder is opened');
+    return;
+  }
+
   // Start the IIS configuration language server
   try {
     const serverCommand = findLanguageServerCommand(

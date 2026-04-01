@@ -1,8 +1,0 @@
-{
-  "extends": "./node_modules/gts/",
-  "ignorePatterns": [
-      "out",
-      "dist",
-      "**/*.d.ts"
-  ]
-}

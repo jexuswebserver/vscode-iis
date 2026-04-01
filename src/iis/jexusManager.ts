@@ -67,7 +67,6 @@ export async function launchJexusManager(
     cwd: path.dirname(jexusManagerPath),
     env: {
       ...process.env,
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       JEXUSMANAGER_BROWSER: browser,
     },
   };

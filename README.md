@@ -6,7 +6,6 @@ This extension gives you the power to run web apps from a folder opened in Visua
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
 [![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
 [![Visual Studio Marketplace Rating](https://img.shields.io/visual-studio-marketplace/r/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
-[![Build](https://img.shields.io/github/actions/workflow/status/JexusWebServer/vscode-iis/ci.yml?branch=main&logo=github&style=for-the-badge)](https://github.com/JexusWebServer/vscode-iis/actions)
 
 ## Call for Sponsorship
 <a href="https://github.com/sponsors/lextm"><img src="https://github.githubassets.com/images/modules/site/sponsors/pixel-mona-heart.gif" align="left" height="24" /></a>
@@ -41,7 +40,7 @@ Use `View | Command Pallette...` to open the command list and search for the com
 
 ## Known Issues
 
-* Initially only IIS Express mode is supported. IIS mode is under development.
+* Only IIS Express mode is supported at this moment.
 
 ## Release Notes
 

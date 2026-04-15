@@ -2,10 +2,11 @@
 
 This extension gives you the power to run web apps from a folder opened in Visual Studio Code using IIS/IIS Express web server.
 
-[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
-[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
-[![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
-[![Visual Studio Marketplace Rating](https://img.shields.io/visual-studio-marketplace/r/lextudio.iis?logo=visual-studio-code&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
+[![Become a Sponsor](https://img.shields.io/badge/Become%20a%20Sponsor-lextudio-orange.svg?style=for-readme)](https://github.com/sponsors/lextudio)
+[![Version](https://vsmarketplacebadges.dev/version/lextudio.iis.svg)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
+[![Installs](https://vsmarketplacebadges.dev/installs-short/lextudio.iis.svg)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
+[![Downloads](https://vsmarketplacebadges.dev/downloads-short/lextudio.iis.svg)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
+[![Rating](https://vsmarketplacebadges.dev/rating/lextudio.iis.svg)](https://marketplace.visualstudio.com/items?itemName=lextudio.iis)
 
 ## Call for Sponsorship
 <a href="https://github.com/sponsors/lextm"><img src="https://github.githubassets.com/images/modules/site/sponsors/pixel-mona-heart.gif" align="left" height="24" /></a>

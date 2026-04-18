@@ -52,15 +52,48 @@ export async function launchJexusManager(
     return;
   }
 
-  const jexusManagerPath = path.join(
-    programFilesPath,
-    'Jexus Manager',
-    'JexusManager.exe'
-  );
-  if (!fs.existsSync(jexusManagerPath)) {
-    learnMore("Jexus Manager isn't installed");
+  let jexusManagerPath: string | null = null;
+  const candidateFolders = ['Jexus Manager', 'JexusManager'];
+  for (const folder of candidateFolders) {
+    const base = path.join(programFilesPath, folder);
+
+    // Check the executable directly under the folder
+    const direct = path.join(base, 'JexusManager.exe');
+    if (fs.existsSync(direct)) {
+      jexusManagerPath = direct;
+      break;
+    }
+
+    // If the folder exists, search first-level subdirectories (versioned folders)
+    try {
+      if (fs.existsSync(base) && fs.statSync(base).isDirectory()) {
+        const entries = fs.readdirSync(base, {withFileTypes: true});
+        for (const e of entries) {
+          if (e.isDirectory()) {
+            const candidate = path.join(base, e.name, 'JexusManager.exe');
+            if (fs.existsSync(candidate)) {
+              jexusManagerPath = candidate;
+              break;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      logger.appendLine(`Error searching ${base}: ${err}`);
+    }
+
+    if (jexusManagerPath) break;
+  }
+
+  if (!jexusManagerPath) {
+    learnMore("Jexus Manager isn't installed or not found in Program File locations");
+    logger.appendLine(`Searched Program File locations but could not find Jexus Manager`);
     return;
   }
+
+  // Normalize to a non-null string for later use
+  const jexusManagerExecutable = jexusManagerPath;
+  logger.appendLine(`Found Jexus Manager at ${jexusManagerExecutable}`);
   const browser = Configuration.getBrowser(resource);
   const args = [path.join(configPath, 'applicationHost.config')];
   const options = {

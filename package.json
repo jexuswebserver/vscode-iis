@@ -55,7 +55,7 @@
     "grammars": [
       {
         "language": "iis-config",
-        "scopeName": "text.xml",
+        "scopeName": "text.xml.iis-config",
         "path": "./syntaxes/iis-config.tmLanguage.json"
       }
     ],

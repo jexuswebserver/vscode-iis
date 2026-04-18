@@ -1,0 +1,149 @@
+{
+  "fileTypes": ["config"],
+  "keyEquivalent": "^~X",
+  "name": "IIS Configuration",
+  "patterns": [
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#doctype"
+    },
+    {
+      "include": "#cdata"
+    },
+    {
+      "include": "#tag"
+    },
+    {
+      "include": "#entity"
+    }
+  ],
+  "repository": {
+    "comment": {
+      "name": "comment.block.xml",
+      "begin": "<!--",
+      "end": "-->",
+      "captures": {
+        "0": {
+          "name": "punctuation.definition.comment.xml"
+        }
+      }
+    },
+    "doctype": {
+      "begin": "<!DOCTYPE",
+      "end": ">",
+      "name": "meta.tag.doctype.xml",
+      "captures": {
+        "0": {
+          "name": "punctuation.definition.tag.xml"
+        }
+      }
+    },
+    "cdata": {
+      "begin": "<\[CDATA\[",
+      "end": "\]\]>",
+      "name": "string.unquoted.cdata.xml"
+    },
+    "tag": {
+      "name": "meta.tag.xml",
+      "begin": "(<)([a-zA-Z:_][a-zA-Z0-9:_.-]*)",
+      "end": "(/>|</\2(\s)*>)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.xml"
+        },
+        "2": {
+          "name": "entity.name.tag.xml"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.tag.end.xml"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#attribute"
+        }
+      ]
+    },
+    "attribute": {
+      "name": "meta.attribute.xml",
+      "begin": "([a-zA-Z:_][a-zA-Z0-9:_.-]*)\s*(=)\s*",
+      "end": "(?=\s|/>|>)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.other.attribute-name.xml"
+        },
+        "2": {
+          "name": "punctuation.definition.attribute-value.begin.xml"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#string"
+        }
+      ]
+    },
+    "string": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.xml",
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.xml"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.xml"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#entity"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.xml",
+          "begin": "'",
+          "end": "'",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.xml"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.xml"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#entity"
+            }
+          ]
+        }
+      ]
+    },
+    "entity": {
+      "name": "constant.character.entity.xml",
+      "match": "(&)([a-zA-Z]+|#[0-9]+|#x[0-9a-fA-F]+)(;)",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.constant.xml"
+        },
+        "3": {
+          "name": "punctuation.definition.constant.xml"
+        }
+      }
+    }
+  },
+  "scopeName": "text.xml",
+  "uuid": "D8D5E82E-3D5B-46B5-B38E-8C841C21347D",
+  "version": "1.0"
+}

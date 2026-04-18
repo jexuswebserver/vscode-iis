@@ -14,6 +14,11 @@ This is a **free extension**. If you find it useful to yourself or your business
 
 ## Features
 
+* Full XML syntax highlighting for `.config` files
+* Context-aware completions for IIS configuration elements and attributes powered by a C# language server
+* View element and attribute type information on hover
+* Validate configuration against IIS schema (foundation ready for diagnostics)
+* Automatically loads schema definitions from IIS Express and IIS installations
 * Detect and launch Jexus Manager to enable the opened project on IIS/IIS Express web server.
 * Multiple-folder workspace is fully supported.
 * Access to most IIS/IIS Express configuration options.

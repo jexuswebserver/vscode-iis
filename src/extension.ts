@@ -14,6 +14,34 @@ import {
   textHomepage,
 } from './util/constants';
 import {Logger} from './util/logger';
+import {LanguageClient, LanguageClientOptions, ServerOptions} from 'vscode-languageclient/node';
+import * as path from 'path';
+
+let languageClient: LanguageClient | undefined;
+
+function findLanguageServerPath(extensionPath: string): string | undefined {
+  const basePath = path.join(
+    extensionPath,
+    'JexusManager/IIS.LanguageServer/bin/Release/net9.0-windows10.0.17763.0'
+  );
+
+  // Try common RIDs in order of preference
+  const rids = ['win-x64', 'win-arm64', 'win-x86'];
+
+  for (const rid of rids) {
+    const serverPath = path.join(basePath, rid, 'IIS.LanguageServer.exe');
+    try {
+      const fs = require('fs');
+      if (fs.existsSync(serverPath)) {
+        return serverPath;
+      }
+    } catch {
+      // Continue to next RID
+    }
+  }
+
+  return undefined;
+}
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -43,6 +71,45 @@ export async function activate(
   if (!supported) {
     logger.appendLine('This extension only works on Windows');
     return;
+  }
+
+  // Start the IIS configuration language server
+  try {
+    const serverPath = findLanguageServerPath(context.extensionPath);
+
+    if (!serverPath) {
+      logger.appendLine(
+        'IIS Configuration Language Server executable not found. Completions and hover will not be available.'
+      );
+    } else {
+      const serverOptions: ServerOptions = {
+        command: serverPath,
+        args: [],
+        options: {
+          stdio: ['pipe', 'pipe', 'pipe']
+        }
+      };
+
+      const clientOptions: LanguageClientOptions = {
+        documentSelector: [{language: 'iis-config', scheme: 'file'}],
+        diagnosticCollectionName: 'iis-config',
+        outputChannel: channel,
+        revealOutputChannelOn: 4 // Never
+      };
+
+      languageClient = new LanguageClient(
+        'iis-config',
+        'IIS Configuration Language Server',
+        serverOptions,
+        clientOptions
+      );
+
+      const disposable = languageClient.start();
+      context.subscriptions.push(disposable);
+      logger.appendLine('IIS Configuration Language Server started');
+    }
+  } catch (error) {
+    logger.appendLine(`Failed to start language server: ${error}`);
   }
 
   if (!singleFolder) {
@@ -114,4 +181,8 @@ export async function activate(
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export async function deactivate() {
+  if (languageClient) {
+    await languageClient.stop();
+  }
+}

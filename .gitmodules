@@ -1,0 +1,3 @@
+[submodule "JexusManager"]
+	path = JexusManager
+	url = https://github.com/jexuswebserver/JexusManager.git

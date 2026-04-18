@@ -12,7 +12,8 @@ import {textConfigFileName} from '../util/constants';
 export async function launchJexusManager(
   context: ExtensionContext,
   logger: Logger,
-  resource: Uri
+  resource: Uri,
+  onProcessStateChange?: (isRunning: boolean) => void
 ) {
   // The code you place here will be executed every time your command is executed
   // Display a message box to the user
@@ -104,32 +105,34 @@ export async function launchJexusManager(
     },
   };
 
-  window.withProgress(
-    {
-      location: ProgressLocation.Notification,
-      title: 'Jexus Manager is working',
-      cancellable: false,
-    },
-    () => {
-      return new Promise<void>((resolve, reject) => {
-        const child = spawn(jexusManagerPath, args, options);
-
-        child.on('error', error => {
-          window.showErrorMessage(
-            `Failed to launch Jexus Manager: ${error.message}`
-          );
-          reject(error);
-        });
-
-        child.on('close', code => {
-          if (code !== 0) {
-            window.showErrorMessage(`Jexus Manager exited with code: ${code}`);
-            reject(new Error(`Exit code: ${code}`));
-          } else {
-            resolve();
-          }
-        });
-      });
+  // Launch Jexus Manager as a detached process so the extension doesn't
+  // keep showing a persistent progress notification while the external
+  // app runs.
+  try {
+    const spawnOptions: any = {
+      ...options,
+      detached: true,
+      stdio: 'ignore',
+    };
+    const child = spawn(jexusManagerPath, args, spawnOptions);
+    child.on('error', error => {
+      window.showErrorMessage(`Failed to launch Jexus Manager: ${error.message}`);
+      logger.appendLine(`Failed to spawn Jexus Manager: ${error}`);
+      onProcessStateChange?.(false);
+    });
+    child.on('exit', () => {
+      logger.appendLine('Jexus Manager process exited');
+      onProcessStateChange?.(false);
+    });
+    // Allow the child to continue running independently of this extension.
+    if (typeof child.unref === 'function') {
+      child.unref();
     }
-  );
+    onProcessStateChange?.(true);
+    logger.appendLine('Launched Jexus Manager (detached)');
+  } catch (err) {
+    window.showErrorMessage(`Failed to launch Jexus Manager: ${err instanceof Error ? err.message : String(err)}`);
+    logger.appendLine(`Exception launching Jexus Manager: ${err}`);
+    onProcessStateChange?.(false);
+  }
 }

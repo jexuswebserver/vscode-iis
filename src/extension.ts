@@ -61,7 +61,6 @@ export async function activate(
     await statusActiveFolder.update();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const statusLaunch = new LaunchStatus();
 
   // Status bar to show the selected config file configuration
@@ -91,8 +90,17 @@ export async function activate(
   const disposable = vscode.commands.registerCommand(
     commandLaunch,
     (resource: vscode.Uri) => {
+      if (statusLaunch.isRunning()) {
+        vscode.window.showInformationMessage(
+          'Jexus Manager is already running.'
+        );
+        return;
+      }
+
       if (JSON.stringify(resource) !== '{}') {
-        launchJexusManager(context, logger, resource);
+        launchJexusManager(context, logger, resource, (isRunning) => {
+          statusLaunch.setRunning(isRunning);
+        });
       } else {
         vscode.window.showErrorMessage(
           'Please select a folder to launch IIS/IIS Express.'

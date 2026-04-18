@@ -85,15 +85,34 @@ export class ActiveFolderStatus {
 
 export class LaunchStatus {
   private _statusBarItem: vscode.StatusBarItem;
+  private _isRunning: boolean = false;
 
   constructor() {
     this._statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left
     );
     this._statusBarItem.command = commandLaunch;
-    this._statusBarItem.text = '$(play)';
-    this._statusBarItem.tooltip = 'Launch IIS Express';
+    this.updateUI();
     this._statusBarItem.show();
+  }
+
+  private updateUI() {
+    if (this._isRunning) {
+      this._statusBarItem.text = '$(circle-filled) IIS Express';
+      this._statusBarItem.tooltip = 'Jexus Manager is running (click to focus)';
+    } else {
+      this._statusBarItem.text = '$(play) IIS Express';
+      this._statusBarItem.tooltip = 'Launch IIS Express';
+    }
+  }
+
+  public setRunning(isRunning: boolean) {
+    this._isRunning = isRunning;
+    this.updateUI();
+  }
+
+  public isRunning(): boolean {
+    return this._isRunning;
   }
 }
 

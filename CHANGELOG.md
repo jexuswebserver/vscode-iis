@@ -4,6 +4,14 @@ All notable changes to the "IIS and IIS Express extension for Visual Studio Code
 
 The format is intentionally simple and VS Code Marketplace friendly: newest release first, with short notes for each published version.
 
+## 1.1.0 - 2026-05-08
+
+- Added language server based features, like autocompletion and diagnostics.
+
+## 1.0.16 - 2026-04-17
+
+- Improved Jexus Manager executable resolution.
+
 ## 1.0.15 - 2026-04-01
 
 - Restricted releases to Windows only.

@@ -1,7 +1,7 @@
-import {ExtensionContext, ProgressLocation, Uri, window} from 'vscode';
+import {ExtensionContext, Uri, window} from 'vscode';
 import {Configuration} from '../util/configuration';
 
-import {spawn} from 'child_process';
+import {spawn, type SpawnOptions} from 'child_process';
 import path = require('path');
 import fs = require('fs');
 import xml2js = require('xml2js');
@@ -109,7 +109,7 @@ export async function launchJexusManager(
   // keep showing a persistent progress notification while the external
   // app runs.
   try {
-    const spawnOptions: any = {
+    const spawnOptions: SpawnOptions = {
       ...options,
       detached: true,
       stdio: 'ignore',

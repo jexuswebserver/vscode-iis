@@ -1,4 +1,18 @@
 import * as assert from 'assert';
+import * as vscode from 'vscode';
 
-assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+suite('Extension', () => {
+  test('registers the IIS config language', async () => {
+    const extension = vscode.extensions.getExtension('lextudio.iis');
+    assert.ok(extension);
+
+    await extension?.activate();
+
+    const doc = await vscode.workspace.openTextDocument({
+      language: 'iis-config',
+      content: '<configuration />',
+    });
+
+    assert.strictEqual(doc.languageId, 'iis-config');
+  });
+});

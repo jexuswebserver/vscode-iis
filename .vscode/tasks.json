@@ -48,6 +48,42 @@
 				"npm: watch-tests"
 			],
 			"problemMatcher": []
+		},
+		{
+			"label": "dotnet: build language server",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"-c",
+				"Debug",
+				"JexusManager/IIS.LanguageServer/IIS.LanguageServer.csproj"
+			],
+			"problemMatcher": "$msCompile",
+			"group": {
+				"kind": "build"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "tasks: build-all",
+			"dependsOn": [
+				"dotnet: build language server",
+				"npm: compile"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "tasks: watch-all-tests",
+			"dependsOn": [
+				"dotnet: build language server",
+				"npm: watch",
+				"npm: watch-tests"
+			],
+			"problemMatcher": []
 		}
 	]
 }

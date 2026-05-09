@@ -8,6 +8,11 @@
       "ES2023"
     ],
     "module": "commonjs",
+    "types": [
+      "node",
+      "mocha",
+      "vscode"
+    ],
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,

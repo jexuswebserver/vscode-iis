@@ -16,31 +16,90 @@ import {
 import {Logger} from './util/logger';
 import {LanguageClient, LanguageClientOptions, ServerOptions} from 'vscode-languageclient/node';
 import * as path from 'path';
+import * as fs from 'fs';
 
 let languageClient: LanguageClient | undefined;
 
-function findLanguageServerPath(extensionPath: string): string | undefined {
-  const basePath = path.join(
-    extensionPath,
-    'JexusManager/IIS.LanguageServer/bin/Release/net9.0-windows10.0.17763.0'
-  );
+type ResolvedServerCommand = {
+  command: string;
+  args: string[];
+  description: string;
+};
 
-  // Try common RIDs in order of preference
-  const rids = ['win-x64', 'win-arm64', 'win-x86'];
+function getPreferredRids(): string[] {
+  const archToRid: Record<string, string> = {
+    x64: 'win-x64',
+    arm64: 'win-arm64',
+    ia32: 'win-x86',
+  };
+  const preferredRid = archToRid[process.arch];
+  const allRids = ['win-x64', 'win-arm64', 'win-x86'];
+  return preferredRid
+    ? [preferredRid, ...allRids.filter((rid) => rid !== preferredRid)]
+    : allRids;
+}
 
+function findServerExecutable(basePath: string, rids: string[]): string | undefined {
   for (const rid of rids) {
     const serverPath = path.join(basePath, rid, 'IIS.LanguageServer.exe');
-    try {
-      const fs = require('fs');
-      if (fs.existsSync(serverPath)) {
-        return serverPath;
-      }
-    } catch {
-      // Continue to next RID
+    if (fs.existsSync(serverPath)) {
+      return serverPath;
     }
   }
 
   return undefined;
+}
+
+function findDebugServerDll(extensionPath: string): string | undefined {
+  const debugDllPath = path.join(
+    extensionPath,
+    'JexusManager/IIS.LanguageServer/bin/Debug/net9.0-windows10.0.17763.0/IIS.LanguageServer.dll'
+  );
+
+  return fs.existsSync(debugDllPath) ? debugDllPath : undefined;
+}
+
+function findLanguageServerCommand(
+  extensionPath: string,
+  extensionMode: vscode.ExtensionMode
+): ResolvedServerCommand | undefined {
+  const rids = getPreferredRids();
+  if (extensionMode === vscode.ExtensionMode.Development || extensionMode === vscode.ExtensionMode.Test) {
+    const debugServerDll = findDebugServerDll(extensionPath);
+    if (debugServerDll) {
+      return {
+        command: 'dotnet',
+        args: [debugServerDll],
+        description: debugServerDll,
+      };
+    }
+
+    const releaseServer = findServerExecutable(
+      path.join(
+        extensionPath,
+        'JexusManager/IIS.LanguageServer/bin/Release/net9.0-windows10.0.17763.0'
+      ),
+      rids
+    );
+    if (releaseServer) {
+      return {
+        command: releaseServer,
+        args: [],
+        description: releaseServer,
+      };
+    }
+  }
+
+  const packagedServer = findServerExecutable(path.join(extensionPath, 'server'), rids);
+  if (!packagedServer) {
+    return undefined;
+  }
+
+  return {
+    command: packagedServer,
+    args: [],
+    description: packagedServer,
+  };
 }
 
 // This method is called when your extension is activated
@@ -75,19 +134,19 @@ export async function activate(
 
   // Start the IIS configuration language server
   try {
-    const serverPath = findLanguageServerPath(context.extensionPath);
+    const serverCommand = findLanguageServerCommand(
+      context.extensionPath,
+      context.extensionMode
+    );
 
-    if (!serverPath) {
+    if (!serverCommand) {
       logger.appendLine(
         'IIS Configuration Language Server executable not found. Completions and hover will not be available.'
       );
     } else {
       const serverOptions: ServerOptions = {
-        command: serverPath,
-        args: [],
-        options: {
-          stdio: ['pipe', 'pipe', 'pipe']
-        }
+        command: serverCommand.command,
+        args: serverCommand.args,
       };
 
       const clientOptions: LanguageClientOptions = {
@@ -104,9 +163,15 @@ export async function activate(
         clientOptions
       );
 
-      const disposable = languageClient.start();
-      context.subscriptions.push(disposable);
-      logger.appendLine('IIS Configuration Language Server started');
+      void languageClient.start();
+      context.subscriptions.push({
+        dispose: () => {
+          if (languageClient) {
+            void languageClient.stop();
+          }
+        },
+      });
+      logger.appendLine(`IIS Configuration Language Server started from ${serverCommand.description}`);
     }
   } catch (error) {
     logger.appendLine(`Failed to start language server: ${error}`);

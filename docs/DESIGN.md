@@ -37,32 +37,132 @@ The server is a self-contained .NET 9.0 console application implementing the Lan
 JexusManager/IIS.LanguageServer/
 ├── Program.cs                          # Entry point, LSP server initialization
 ├── Handlers/
-│   ├── CompletionHandler.cs           # Completion provider
-│   ├── HoverHandler.cs                # Hover provider
-│   ├── DiagnosticsHandler.cs          # Validation provider
+│   ├── CompletionHandler.cs           # Completion provider (IISCompletionHandler)
+│   ├── HoverHandler.cs                # Hover provider (IISHoverHandler)
+│   ├── DefinitionHandler.cs           # Go-to-definition provider (IISDefinitionHandler)
+│   ├── DiagnosticsHandler.cs          # Validation provider (stub — not yet wired to LSP)
 │   └── TextDocumentSyncHandler.cs     # Document sync (open/change/close)
 ├── Schema/
-│   ├── SchemaLoader.cs                # Loads IIS schema files
-│   └── SchemaCache.cs                 # In-memory schema cache
+│   ├── SchemaLoader.cs                # Finds IIS schema files on disk
+│   └── SchemaCache.cs                 # Facade over LanguageServerSchemaService
 └── Language/
-    └── XmlPositionAnalyzer.cs         # Cursor position analysis
+    ├── XmlPositionAnalyzer.cs         # Cursor position analysis (element path, context type)
+    └── XmlCursorContext.cs            # XmlCursorLocator + XmlCursorContext record + XmlTokenKind
 ```
 
-**Framework**: Uses CppCXY's LanguageServer.Framework for LSP protocol handling.
+**Framework**: Uses [EmmyLua/LanguageServer.Framework](https://github.com/CppCXY/EmmyLuaAnalyzer) for LSP protocol handling (namespace `EmmyLua.LanguageServer.Framework`).
 
 ### 3. Foundation: JexusManager
 
-The JexusManager submodule provides:
-- **Microsoft.Web.Administration**: Proven C# library for IIS schema parsing and validation
-- **ConfigurationElementSchema**: Element schema model
-- **ConfigurationAttributeSchema**: Attribute schema model with type information
-- **Type Validators**: Built-in parsers for bool, enum, int, string, timeSpan types
+The JexusManager submodule (`Microsoft.Web.Administration`) provides the complete IIS schema system. The language server must be a **consumer** of this library — it must not duplicate schema parsing logic.
 
-**Approach**: Directly use JexusManager's C# classes to load and parse IIS schema files at runtime.
+**Key classes and their roles:**
+
+| Class | Location | Role |
+|-------|----------|------|
+| `FileContext` | `FileContext.cs` | Internal: loads schema files, owns `_sectionSchemas` dictionary |
+| `SectionSchema` | `SectionSchema.cs` | Internal: parses `<sectionSchema>` elements into a root `ConfigurationElementSchema` |
+| `ConfigurationElementSchema` | `ConfigurationElementSchema.cs` | Public: schema for one XML element — holds `AttributeSchemas`, `ChildElementSchemas`, `CollectionSchema` |
+| `ConfigurationAttributeSchema` | `ConfigurationAttributeSchema.cs` | Public: schema for one attribute — type, required, default, enum values, validator |
+| `ConfigurationCollectionSchema` | `ConfigurationCollectionSchema.cs` | Public: schema for add/remove/clear collections |
+| `SectionGroup` / `SectionDefinition` | `SectionGroup.cs` / `SectionDefinition.cs` | Public: section catalog with `AllowDefinition`, `OverrideModeDefault` |
+| `ValidatorRegistry` | `ValidatorRegistry.cs` | Internal: discovers validator types by reflection |
+| `ConfigurationValidatorBase` | subclasses | Internal: per-attribute validation (range, name, path, non-empty, etc.) |
+
+**Embedded schema resources** (fallback when IIS Express/IIS is not installed):
+
+```
+Microsoft.Web.Administration/Resources/
+├── IIS_schema.xml          # Core IIS sections
+├── FX_schema.xml           # ASP.NET / .NET Framework sections
+└── rewrite_schema.xml      # URL Rewrite module sections
+```
+
+### 4. The Missing Bridge: `LanguageServerSchemaService` + `LanguageServerSymbol`
+
+`SchemaCache` references `LanguageServerSchemaService` and `LanguageServerSymbol` / `LanguageServerSymbolKind` — these **do not yet exist** and are the primary implementation gap.
+
+**`LanguageServerSymbol`** is a plain data record carrying everything needed to render hover text or jump to definition:
+
+```csharp
+public record LanguageServerSymbol(
+    LanguageServerSymbolKind Kind,
+    string Name,
+    string Path,
+    string? ParentPath,
+    string? Type,
+    string? DefaultValue,
+    bool Required,
+    IReadOnlyList<string> EnumValues,
+    string? FilePath,
+    int LineNumber
+);
+
+public enum LanguageServerSymbolKind
+{
+    Unknown,
+    SectionGroup,
+    Section,
+    Element,
+    CollectionItem,
+    Attribute,
+    EnumValue
+}
+```
+
+**`LanguageServerSchemaService`** wraps `Microsoft.Web.Administration` schema classes to answer LSP queries. It **must not replicate** `FileContext`'s schema parsing logic. `SectionSchema` and related classes are `internal` — expose them to `IIS.LanguageServer` via `[InternalsVisibleTo]` in `Microsoft.Web.Administration` rather than reflection or API surface changes:
+
+```csharp
+// In Microsoft.Web.Administration/AssemblyInfo.cs (or Properties/AssemblyInfo.cs)
+[assembly: InternalsVisibleTo("IIS.LanguageServer")]
+```
+
+This gives `IIS.LanguageServer` direct compiled access to all `internal` types and members without touching the public API.
+
+```csharp
+// Lives in IIS.LanguageServer/Schema/LanguageServerSchemaService.cs
+public class LanguageServerSchemaService
+{
+    // Directly calls internal SectionSchema.ParseSectionSchema() — no reflection needed
+    public LanguageServerSchemaService(IEnumerable<string> schemaFiles) { ... }
+
+    public IEnumerable<string> GetChildElementNames(string elementPath) { ... }
+    public IEnumerable<string> GetAttributeNames(string elementPath) { ... }
+    public string? GetAttributeType(string elementPath, string attributeName) { ... }
+    public IEnumerable<string> GetAttributeValues(string elementPath, string attributeName) { ... }
+
+    public LanguageServerSymbol? ResolveElement(string elementPath) { ... }
+    public LanguageServerSymbol? ResolveAttribute(string elementPath, string attributeName) { ... }
+    public LanguageServerSymbol? ResolveAttributeValue(string elementPath, string attributeName, string? value) { ... }
+}
+```
+
+**Bootstrap sequence** using internal access:
+
+```csharp
+// 1. Load each schema XDocument with line info
+var doc = XDocument.Load(filePath, LoadOptions.SetLineInfo);
+
+// 2. For each <sectionSchema> element call internal SectionSchema.ParseSectionSchema()
+//    (accessible because of [InternalsVisibleTo("IIS.LanguageServer")])
+foreach (var sectionElement in doc.Descendants("sectionSchema"))
+{
+    var sectionSchema = SectionSchema.ParseSectionSchema(sectionElement, filePath);
+    // sectionSchema.Root is ConfigurationElementSchema (public type)
+    _schemas[sectionSchema.Name] = sectionSchema;
+}
+
+// 3. Walk public ConfigurationElementSchema / ConfigurationAttributeSchema APIs
+//    (AttributeSchemas, ChildElementSchemas, CollectionSchema, GetEnumValues(), etc.)
+```
+
+`ConfigurationElementSchema` and `ConfigurationAttributeSchema` are **public** classes, so schema traversal after bootstrap uses normal compiled code.
+
+**`LanguageServerSymbol`** and **`LanguageServerSymbolKind`** live in `IIS.LanguageServer` (the only change to `Microsoft.Web.Administration` is adding `[InternalsVisibleTo]`).
 
 ## Implementation Plan
 
-### Phase 1: Fix Syntax Highlighting
+### Phase 1: Fix Syntax Highlighting ✅
 
 **Files to Modify**:
 - `package.json` - Add grammar contribution
@@ -70,53 +170,113 @@ The JexusManager submodule provides:
 
 **Solution**: Map `iis-config` language to XML grammar scope.
 
-### Phase 2: Schema Loading
+### Phase 2: Schema File Discovery ✅
 
-**Files to Create**:
-- `JexusManager/IIS.LanguageServer/Schema/SchemaLoader.cs` - Use Microsoft.Web.Administration to load schema files from:
-  1. `C:\Program Files\IIS Express\config\schema` (primary)
-  2. `C:\Program Files (x86)\IIS Express\config\schema`
-  3. `C:\Windows\System32\inetsrv\config\schema` (fallback)
+**File**: `JexusManager/IIS.LanguageServer/Schema/SchemaLoader.cs`
 
-**Approach**: Leverage JexusManager's existing `FileContext.LoadSchemasFromMode()` and `LoadSchema()` patterns.
+`SchemaLoader.FindSchemaFiles()` already locates `*_schema.xml` files from:
+1. `%ProgramFiles%\IIS Express\config\schema` (primary)
+2. `%ProgramFiles(x86)%\IIS Express\config\schema`
+3. `%SystemRoot%\System32\inetsrv\config\schema`
 
-### Phase 3: Schema Cache
+**Gap**: Does not fall back to embedded resources (`Microsoft.Web.Administration/Resources/*.xml`) when no IIS install is present. This is important for environments that only have the extension installed.
 
-**Files to Create**:
-- `JexusManager/IIS.LanguageServer/Schema/SchemaCache.cs` - In-memory cache of parsed IIS schemas
+### Phase 3: Schema Bridge — `LanguageServerSchemaService` ⏳
 
-**Core Usage**:
-- Use JexusManager's `ConfigurationElementSchema`, `ConfigurationAttributeSchema` directly
-- Cache parsed `SectionSchema` objects (element hierarchies with attribute definitions)
-- Provide lookup methods: GetElement(path), GetAttribute(elementPath, attrName)
+**Files to Create**: Add to `Microsoft.Web.Administration` project (not to `IIS.LanguageServer`):
+- `LanguageServerSchemaService.cs`
+- `LanguageServerSymbol.cs`
 
-### Phase 4: XML Position Analysis
+**How schema loading must work**:
 
-**Files to Create**:
-- `JexusManager/IIS.LanguageServer/Language/XmlPositionAnalyzer.cs`
+```
+SchemaLoader.FindSchemaFiles()
+    → list of *.xml file paths
+    → SchemaCache(files)
+    → LanguageServerSchemaService(files)
+    → for each file: parse <sectionSchema> elements via SectionSchema.ParseSectionSchema()
+    → store Dictionary<string, SectionSchema> keyed by section path
+    → element lookups walk: sectionSchemas[sectionPath].Root.FindSchema(subPath)
+```
 
-Given a cursor position in a document, determine:
-- Current element path (e.g., `configuration/system.webServer/security`)
-- Context (element tag, attribute name, attribute value)
+**Key `ConfigurationElementSchema` traversal**:
+- `element.AttributeSchemas` — attribute names and their `ConfigurationAttributeSchema`
+- `element.ChildElementSchemas` — child element names and their `ConfigurationElementSchema`
+- `element.CollectionSchema` — if non-null, add/remove/clear element names + the add-element's attribute schemas
+- `attribute.GetEnumValues()` — for enum/flags types, returns `ConfigurationEnumValueCollection`
+- `attribute.Type` — `"bool"`, `"enum"`, `"flags"`, `"uint"`, `"int"`, `"int64"`, `"string"`, `"timeSpan"`
+- `attribute.IsRequired`, `attribute.DefaultValue`
 
-### Phase 5: LSP Handlers
+**`LanguageServerSymbol` source locations**: `SectionSchema` (and each element/attribute node within it) should carry `FilePath` + `LineNumber` so the Definition handler can jump to the exact line in the schema XML file.
 
-**Files to Create**:
-- `JexusManager/IIS.LanguageServer/Handlers/CompletionHandler.cs`
-  - Suggest child elements based on schema
-  - Suggest attribute names
-  - Suggest enum values for enum attributes
+### Phase 4: Schema Cache Facade ✅ (scaffolded)
 
-- `JexusManager/IIS.LanguageServer/Handlers/HoverHandler.cs`
-  - Show attribute type, required status, default value, description
+**File**: `JexusManager/IIS.LanguageServer/Schema/SchemaCache.cs`
 
-- `JexusManager/IIS.LanguageServer/Handlers/DiagnosticsHandler.cs`
-  - Validate required attributes
-  - Validate attribute types/enums
-  - Report unknown attributes/elements
+`SchemaCache` is already scaffolded as a thin facade. Once `LanguageServerSchemaService` exists in `Microsoft.Web.Administration`, `SchemaCache` will compile and work.
 
-- `JexusManager/IIS.LanguageServer/Handlers/TextDocumentSyncHandler.cs`
-  - Handle didOpen, didChange, didClose notifications
+### Phase 5: XML Position Analysis ✅
+
+**Files**: `JexusManager/IIS.LanguageServer/Language/XmlPositionAnalyzer.cs` + `XmlCursorContext.cs`
+
+Two complementary classes:
+
+- **`XmlPositionAnalyzer.GetContext(text, offset)`** — returns `XmlContext` with:
+  - `ElementPath`: `/`-joined stack of open tags (e.g. `configuration/system.webServer/security`)
+  - `CurrentElementName`, `CurrentAttributeName`, `CurrentAttributeValue`
+  - `ContextType`: `ElementTag | AttributeName | AttributeValue | ElementContent | Unknown`
+
+- **`XmlCursorLocator.Locate(text, line, character)`** — returns `XmlCursorContext` with:
+  - The `XmlContext` above
+  - `TokenKind`: `ElementName | AttributeName | AttributeValue | None`
+  - `TokenText`: the exact token under the cursor
+  - `StartCharacter` / `EndCharacter`: for range-based `TextEdit` in completions
+
+**Known limitation**: uses regex-based parsing. Malformed XML (unclosed tags, mismatched nesting) can produce incorrect element paths. This is acceptable for the current scope.
+
+### Phase 6: LSP Handlers
+
+#### TextDocumentSyncHandler ✅ (scaffolded)
+
+Handles `didOpen`, `didChange`, `didClose`. Maintains an in-memory `Dictionary<string, string>` of URI → document text. Exposes `GetDocumentContent(uri)`.
+
+#### CompletionHandler ✅ (scaffolded)
+
+`IISCompletionHandler` — already wired to `SchemaCache` and `XmlCursorLocator`. Logic:
+1. If `ContextType == AttributeValue` → `SchemaCache.GetAttributeValues(path, attrName)` → `CompletionItemKind.Value`
+2. Otherwise → `SchemaCache.GetChildElementNames(path)` → `CompletionItemKind.Struct`
+3. Otherwise → `SchemaCache.GetAttributeNames(path)` → `CompletionItemKind.Property` with `attr=""`
+
+**Gap**: Steps 2 and 3 are not mutually exclusive — both run even when inside a tag. Should check `ContextType` / `TokenKind` to avoid mixing element and attribute completions.
+
+#### HoverHandler ✅ (scaffolded)
+
+`IISHoverHandler` — resolves a `LanguageServerSymbol` from `SchemaCache` and formats it as Markdown:
+- Section/element: path
+- Attribute: type, default, required, allowed enum values
+- Attribute value: which enum value it is
+- All: schema file link + line number (Go-to-Definition hint)
+
+#### DefinitionHandler ✅ (scaffolded)
+
+`IISDefinitionHandler` — jumps to the exact line in the schema XML file. Requires `LanguageServerSymbol.FilePath` and `LanguageServerSymbol.LineNumber` to be populated by `LanguageServerSchemaService`.
+
+#### DiagnosticsHandler ⏳ (stub)
+
+`DiagnosticsHandler.ValidateDocument()` is an empty stub. It is **not yet registered** with the LSP server (not added in `Program.cs`). To implement:
+- Parse document XML with `XDocument.Load()`
+- Walk elements and validate against `SchemaCache`
+- Use `ConfigurationValidatorBase` subclasses (via `ConfigurationAttributeSchema.CreateValidator()`) for per-attribute validation
+- Push `PublishDiagnosticsParams` via the LSP server's notification mechanism
+
+### Phase 7: Wire Extension Client to Server ⏳
+
+**File**: `src/extension.ts`, `package.json`
+
+- Create `LanguageClient` (from `vscode-languageclient`) that spawns the compiled C# executable
+- Pass `--stdio` flag
+- Register for `iis-config` language documents
+- Handle server lifecycle (start on activate, stop on deactivate)
 
 ## File Structure
 
@@ -138,54 +298,130 @@ vscode-iis/
 ├── package.json
 ├── JexusManager/ (submodule)
 │   ├── IIS.LanguageServer/
-│   │   ├── Program.cs            # Entry point
+│   │   ├── Program.cs                      # Entry point; wires all handlers
 │   │   ├── Handlers/
-│   │   │   ├── CompletionHandler.cs
-│   │   │   ├── HoverHandler.cs
-│   │   │   ├── DiagnosticsHandler.cs
+│   │   │   ├── CompletionHandler.cs        # IISCompletionHandler
+│   │   │   ├── HoverHandler.cs             # IISHoverHandler
+│   │   │   ├── DefinitionHandler.cs        # IISDefinitionHandler
+│   │   │   ├── DiagnosticsHandler.cs       # stub, not wired to LSP yet
 │   │   │   └── TextDocumentSyncHandler.cs
 │   │   ├── Schema/
-│   │   │   ├── SchemaLoader.cs
-│   │   │   └── SchemaCache.cs
+│   │   │   ├── SchemaLoader.cs             # FindSchemaFiles() — disk discovery
+│   │   │   ├── SchemaCache.cs              # Facade over LanguageServerSchemaService
+│   │   │   ├── LanguageServerSchemaService.cs  # TO CREATE — schema query (uses internal MWA types)
+│   │   │   ├── LanguageServerSymbol.cs         # TO CREATE — hover/definition data record
+│   │   │   └── LanguageServerSymbolKind.cs     # TO CREATE — enum
 │   │   └── Language/
-│   │       └── XmlPositionAnalyzer.cs
+│   │       ├── XmlPositionAnalyzer.cs      # GetContext() — element path + ContextType
+│   │       └── XmlCursorContext.cs         # XmlCursorLocator.Locate() + XmlTokenKind
 │   ├── Microsoft.Web.Administration/
+│   │   ├── Properties/AssemblyInfo.cs      # ADD [InternalsVisibleTo("IIS.LanguageServer")]
+│   │   ├── FileContext.cs                  # internal schema loading
+│   │   ├── SectionSchema.cs                # internal schema parsing
+│   │   ├── ConfigurationElementSchema.cs
+│   │   ├── ConfigurationAttributeSchema.cs
+│   │   ├── ConfigurationCollectionSchema.cs
+│   │   └── Resources/
+│   │       ├── IIS_schema.xml
+│   │       ├── FX_schema.xml
+│   │       └── rewrite_schema.xml
 │   └── Microsoft.Web.Configuration.AppHostFileProvider/
-└── LanguageServer.Framework/ (submodule)
+└── LanguageServer.Framework/ (submodule)    # EmmyLua.LanguageServer.Framework
 ```
 
-## Key References from JexusManager
+## Key JexusManager APIs for Schema Queries
 
-C# classes to leverage for schema loading and parsing:
-- `FileContext.cs`: `LoadSchemasFromMode()`, `LoadSchema()` - schema file discovery and loading
-- `SectionSchema.cs`: `ParseSectionSchema()` - recursive schema parsing and building element hierarchies
-- `ConfigurationElementSchema.cs` - element schema model with attributes and child elements
-- `ConfigurationAttributeSchema.cs` - attribute schema model with type information, validation, default values
+### Element traversal
+
+```csharp
+// Get the root element schema for a section (e.g., "system.webServer/defaultDocument")
+ConfigurationElementSchema? root = sectionSchema.Root;
+
+// Walk to a sub-element (e.g., "files")
+ConfigurationElementSchema? child = root.ChildElementSchemas["files"];
+
+// Collection items (add/remove/clear)
+ConfigurationCollectionSchema? coll = root.CollectionSchema;
+ConfigurationElementSchema? addSchema = coll?.GetAddElementSchema("add");
+
+// Attributes on an element
+foreach (ConfigurationAttributeSchema attr in element.AttributeSchemas)
+{
+    string name = attr.Name;
+    string type = attr.Type;          // bool|enum|flags|uint|int|int64|string|timeSpan
+    string? def = attr.DefaultValue;
+    bool req  = attr.IsRequired;
+    // enum/flags values:
+    foreach (ConfigurationEnumValue v in attr.GetEnumValues())
+        Console.WriteLine(v.Name);
+}
+```
+
+### `LanguageServerSchemaService` responsibilities
+
+| Method | JexusManager API used |
+|--------|----------------------|
+| `GetChildElementNames(path)` | `element.ChildElementSchemas` names + collection add-element names |
+| `GetAttributeNames(path)` | `element.AttributeSchemas` names (+ add-element schemas for collection paths) |
+| `GetAttributeType(path, attr)` | `ConfigurationAttributeSchema.Type` |
+| `GetAttributeValues(path, attr)` | `ConfigurationAttributeSchema.GetEnumValues()` |
+| `ResolveElement(path)` | Builds `LanguageServerSymbol` from `ConfigurationElementSchema` |
+| `ResolveAttribute(path, attr)` | Builds `LanguageServerSymbol` from `ConfigurationAttributeSchema` |
+| `ResolveAttributeValue(path, attr, value)` | Finds `ConfigurationEnumValue` by name |
+
+### Source location tracking
+
+`SectionSchema` is parsed from XML via `XDocument`. Nodes have `IXmlLineInfo` when loaded with `LoadOptions.SetLineInfo`. Both `LanguageServerSchemaService` and `SectionSchema.ParseSectionSchema()` should capture `FilePath` and `LineNumber` from `IXmlLineInfo` so `LanguageServerSymbol` can carry them for Definition navigation.
 
 ## Dependencies
 
 **C# (.NET 9.0)**:
-- LanguageServer.Framework (submodule) - LSP protocol implementation
-- Microsoft.Web.Administration (from JexusManager) - IIS schema parsing
-- Microsoft.Web.Configuration.AppHostFileProvider (from JexusManager) - IIS config file access
+- `EmmyLua.LanguageServer.Framework` (submodule at `LanguageServer.Framework/`) — LSP protocol
+- `Microsoft.Web.Administration` (from JexusManager submodule) — IIS schema parsing
+- `Microsoft.Web.Configuration.AppHostFileProvider` (from JexusManager) — IIS config file access
 
 **NPM (VSCode Extension Client)**:
-- `vscode-languageclient@^9.0.1` - LSP client for VSCode
+- `vscode-languageclient@^9.0.1` — LSP client for VSCode
 
 ## Implementation Status
 
-- ✅ **Phase 1**: XML syntax highlighting fixed (TextMate grammar added)
-- ✅ **Program.cs**: Minimal LSP server skeleton in place using LanguageServer.Framework
-- ⏳ **Phase 2-3**: Schema loader and cache implementation (C#)
-- ⏳ **Phase 4**: XML position analyzer implementation (C#)
-- ⏳ **Phase 5**: LSP handlers (Completion, Hover, Diagnostics, TextSync) implementation (C#)
-- ⏳ **Phase 5b**: Wire VSCode extension client to launch C# server executable
+| Phase | Component | Status |
+|-------|-----------|--------|
+| 1 | XML syntax highlighting | ✅ Done |
+| 2 | Schema file discovery (`SchemaLoader`) | ✅ Done (missing embedded-resource fallback) |
+| 3 | `LanguageServerSchemaService` + `LanguageServerSymbol` | ⏳ **Not started — primary gap** |
+| 4 | `SchemaCache` facade | ✅ Scaffolded (blocked by Phase 3) |
+| 5 | XML position analysis (`XmlPositionAnalyzer`, `XmlCursorLocator`) | ✅ Done |
+| 6a | `TextDocumentSyncHandler` | ✅ Scaffolded |
+| 6b | `CompletionHandler` | ✅ Scaffolded (blocked by Phase 3) |
+| 6c | `HoverHandler` | ✅ Scaffolded (blocked by Phase 3) |
+| 6d | `DefinitionHandler` | ✅ Scaffolded (blocked by Phase 3) |
+| 6e | `DiagnosticsHandler` | ⏳ Stub, not wired to LSP |
+| 7 | Extension client → server wiring | ⏳ Not started |
 
-## Next Steps
+## Next Steps (priority order)
 
-1. Implement IIS schema loader (Phase 2) - Use JexusManager's FileContext and schema loading patterns
-2. Implement schema cache (Phase 3) - Cache parsed SectionSchema objects
-3. Implement XML position analyzer (Phase 4) - Determine cursor context in documents
-4. Implement LSP handlers (Phase 5) - Completions, hover, diagnostics, text sync
-5. Wire extension.ts to launch C# server - Create LanguageClient, spawn server executable
-6. Test completions, hover, and validation with real IIS config files
+1. **Add `[InternalsVisibleTo("IIS.LanguageServer")]` to `Microsoft.Web.Administration`**
+   - Minimal change: one attribute in `AssemblyInfo.cs`; no API surface change; existing unit tests unaffected
+
+2. **Implement `LanguageServerSchemaService` + `LanguageServerSymbol` in `IIS.LanguageServer`**
+   - Call internal `SectionSchema.ParseSectionSchema()` directly
+   - Capture `FilePath` + `LineNumber` from `IXmlLineInfo` on schema XML nodes
+   - Wire through `SchemaCache`
+
+2. **Add embedded-resource fallback to `SchemaLoader`**
+   - If no IIS Express / IIS schema folder found, extract `IIS_schema.xml`, `FX_schema.xml`, `rewrite_schema.xml` from assembly resources
+
+3. **Fix `CompletionHandler` context discrimination**
+   - Only suggest child elements when `ContextType == ElementContent`
+   - Only suggest attributes when `ContextType == AttributeName` (inside a tag, past element name)
+
+4. **Implement `DiagnosticsHandler` and wire to LSP**
+   - Parse document with `XDocument`; validate each element/attribute against `SchemaCache`
+   - Push `PublishDiagnosticsParams` after `didOpen` / `didChange`
+
+5. **Wire `extension.ts` to launch C# server**
+   - Create `LanguageClient`, spawn server executable, register for `iis-config` documents
+
+6. **End-to-end test with real IIS config files**
+   - Completions, hover, go-to-definition, diagnostics

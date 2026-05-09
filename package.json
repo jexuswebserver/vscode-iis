@@ -2,7 +2,7 @@
   "name": "iis",
   "displayName": "IIS and IIS Express extension for Visual Studio Code",
   "description": "IIS and IIS Express extension for Visual Studio Code. Quickly launch your project in Jexus Manager so that you can run it with local IIS and/or IIS Express.",
-  "version": "1.0.16",
+  "version": "1.1.0",
   "publisher": "lextudio",
   "os": [
     "win32"
@@ -149,7 +149,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run bundle:language-server && npm run package",
+    "vscode:prepublish": "npm run package",
     "compile": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --sourcemap",
     "watch": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --sourcemap --watch",
     "package": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --sourcemap=external --minify",
